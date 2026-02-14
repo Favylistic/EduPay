@@ -2,54 +2,41 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { signUp } from "@/lib/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
 
 export function SignUpForm() {
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
+    const form = e.currentTarget
+    const formData = new FormData(form)
+
+    const password = formData.get("password") as string
     if (password.length < 6) {
       setError("Password must be at least 6 characters")
       setLoading(false)
       return
     }
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          role: "staff",
-        },
-      },
-    })
-
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
+    try {
+      const result = await signUp(formData)
+      if (result?.error) {
+        setError(result.error)
+        setLoading(false)
+      }
+      // If no error, the server action redirects to /auth/sign-up-success
+    } catch {
+      // redirect() throws a NEXT_REDIRECT error - this is expected behavior
     }
-
-    router.push("/auth/sign-up-success")
   }
 
   return (
@@ -59,10 +46,9 @@ export function SignUpForm() {
           <Label htmlFor="first_name">First name</Label>
           <Input
             id="first_name"
+            name="first_name"
             type="text"
             placeholder="John"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
             required
           />
         </div>
@@ -70,10 +56,9 @@ export function SignUpForm() {
           <Label htmlFor="last_name">Last name</Label>
           <Input
             id="last_name"
+            name="last_name"
             type="text"
             placeholder="Doe"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
             required
           />
         </div>
@@ -82,10 +67,9 @@ export function SignUpForm() {
         <Label htmlFor="email">Email</Label>
         <Input
           id="email"
+          name="email"
           type="email"
           placeholder="you@school.edu"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
         />
@@ -94,10 +78,9 @@ export function SignUpForm() {
         <Label htmlFor="password">Password</Label>
         <Input
           id="password"
+          name="password"
           type="password"
           placeholder="Min. 6 characters"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
           autoComplete="new-password"
