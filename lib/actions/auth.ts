@@ -4,13 +4,13 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 
 function getBaseUrl() {
-  // Vercel preview/production deployments
+  // Explicit site URL override (set this in Vercel env vars)
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")
+  }
+  // Vercel preview/production deployments (auto-set by Vercel)
   if (process.env.NEXT_PUBLIC_VERCEL_URL) {
     return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-  }
-  // Explicit site URL override
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL
   }
   // Fallback for local dev
   return "http://localhost:3000"

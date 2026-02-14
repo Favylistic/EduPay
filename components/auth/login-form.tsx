@@ -21,20 +21,35 @@ export function LoginForm() {
     setLoading(true)
     setError(null)
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (error) {
-      setError(error.message)
+      console.log("[v0] signIn result:", { user: data?.user?.id, session: !!data?.session, error: error?.message })
+
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      if (!data.session) {
+        setError("Sign in succeeded but no session was returned. Please check your email for a confirmation link.")
+        setLoading(false)
+        return
+      }
+
+      // Refresh to let middleware pick up the new session cookies, then navigate
+      router.refresh()
+      router.push("/dashboard")
+    } catch (err) {
+      console.log("[v0] signIn caught error:", err)
+      setError("An unexpected error occurred. Please try again.")
       setLoading(false)
-      return
     }
-
-    router.push("/dashboard")
-    router.refresh()
   }
 
   return (
