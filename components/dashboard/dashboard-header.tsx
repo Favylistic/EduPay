@@ -4,20 +4,20 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import {
   Breadcrumb,
-  BreadcrumbItem,
+  BreadcrumbItem as BreadcrumbItemUI,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 
-interface BreadcrumbItem {
+interface BreadcrumbEntry {
   label: string
   href?: string
 }
 
 interface DashboardHeaderProps {
-  breadcrumbs: BreadcrumbItem[]
+  breadcrumbs: BreadcrumbEntry[]
 }
 
 export function DashboardHeader({ breadcrumbs }: DashboardHeaderProps) {
@@ -32,7 +32,7 @@ export function DashboardHeader({ breadcrumbs }: DashboardHeaderProps) {
             return (
               <span key={item.label} className="flex items-center gap-1.5">
                 {index > 0 && <BreadcrumbSeparator />}
-                <BreadcrumbItem>
+                <BreadcrumbItemUI>
                   {isLast ? (
                     <BreadcrumbPage>{item.label}</BreadcrumbPage>
                   ) : (
@@ -40,7 +40,7 @@ export function DashboardHeader({ breadcrumbs }: DashboardHeaderProps) {
                       {item.label}
                     </BreadcrumbLink>
                   )}
-                </BreadcrumbItem>
+                </BreadcrumbItemUI>
               </span>
             )
           })}
