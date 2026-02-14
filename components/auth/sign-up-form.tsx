@@ -36,7 +36,7 @@ export function SignUpForm() {
       options: {
         emailRedirectTo:
           process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-          `${window.location.origin}/dashboard`,
+          `${window.location.origin}/auth/callback`,
         data: {
           first_name: firstName,
           last_name: lastName,
