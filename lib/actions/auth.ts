@@ -3,6 +3,19 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 
+function getBaseUrl() {
+  // Vercel preview/production deployments
+  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+  }
+  // Explicit site URL override
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL
+  }
+  // Fallback for local dev
+  return "http://localhost:3000"
+}
+
 export async function signIn(formData: FormData) {
   const supabase = await createClient()
 
@@ -32,9 +45,7 @@ export async function signUp(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo:
-        process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-        `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/callback`,
+      emailRedirectTo: getBaseUrl() + "/auth/callback",
       data: {
         first_name: firstName,
         last_name: lastName,
