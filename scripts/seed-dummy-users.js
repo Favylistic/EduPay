@@ -157,7 +157,7 @@ async function main() {
       profile_id: staffUser.id,
       department_id: dept1.id,
       designation_id: desig1.id,
-      staff_type: "full_time",
+      staff_type: "non_academic",
       employment_status: "active",
       gender: "female",
       date_of_birth: "1995-06-15",
