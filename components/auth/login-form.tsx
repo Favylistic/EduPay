@@ -23,13 +23,23 @@ export function LoginForm() {
 
     try {
       const supabase = createClient()
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
         setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      // Check if the user's email has been confirmed
+      if (data.user && !data.user.email_confirmed_at) {
+        await supabase.auth.signOut()
+        setError(
+          "Your email has not been verified yet. Please check your inbox and click the confirmation link before signing in."
+        )
         setLoading(false)
         return
       }

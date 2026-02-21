@@ -17,8 +17,13 @@ export default function SignUpSuccessPage() {
             <MailCheck className="h-7 w-7 text-accent-foreground" />
           </div>
           <CardTitle className="text-xl">Check your email</CardTitle>
-          <CardDescription>
-            {"We've sent you a confirmation link. Please check your email to verify your account and complete registration."}
+          <CardDescription className="flex flex-col gap-2">
+            <span>
+              {"We've sent you a confirmation link. Please check your email to verify your account before signing in."}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {"If you don't see it, check your spam folder. You must verify your email before you can log in."}
+            </span>
           </CardDescription>
         </CardHeader>
         <CardContent>

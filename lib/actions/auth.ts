@@ -11,10 +11,19 @@ export async function signIn(formData: FormData) {
     password: formData.get("password") as string,
   }
 
-  const { error } = await supabase.auth.signInWithPassword(data)
+  const { data: authData, error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
     return { error: error.message }
+  }
+
+  // Block unverified users from signing in
+  if (authData.user && !authData.user.email_confirmed_at) {
+    await supabase.auth.signOut()
+    return {
+      error:
+        "Your email has not been verified yet. Please check your inbox and click the confirmation link before signing in.",
+    }
   }
 
   redirect("/dashboard")
@@ -34,7 +43,7 @@ export async function signUp(formData: FormData) {
     options: {
       emailRedirectTo:
         process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-        `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/dashboard`,
+        `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/callback?next=/dashboard`,
       data: {
         first_name: firstName,
         last_name: lastName,

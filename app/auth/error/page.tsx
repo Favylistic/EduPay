@@ -8,7 +8,13 @@ export const metadata: Metadata = {
   title: "Authentication Error",
 }
 
-export default function AuthErrorPage() {
+export default async function AuthErrorPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ message?: string }>
+}) {
+  const { message } = await searchParams
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md text-center">
@@ -18,7 +24,7 @@ export default function AuthErrorPage() {
           </div>
           <CardTitle className="text-xl">Authentication Error</CardTitle>
           <CardDescription>
-            Something went wrong during authentication. Please try again.
+            {message || "Something went wrong during authentication. Please try again."}
           </CardDescription>
         </CardHeader>
         <CardContent>
