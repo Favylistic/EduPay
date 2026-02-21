@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation"
+
 import { createClient } from "@/lib/supabase/server"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+
 import type { Profile } from "@/lib/types"
 
-// Dashboard layout with Supabase auth and profile resolution
 export default async function DashboardLayout({
   children,
 }: {
@@ -20,15 +21,12 @@ export default async function DashboardLayout({
     redirect("/auth/login")
   }
 
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", user.id)
     .single()
 
-  // If profile query fails, construct a fallback profile from auth metadata
-  // instead of redirecting to login (which causes an infinite redirect loop
-  // because the middleware sees the user is authenticated and sends them back).
   const resolvedProfile: Profile = profile ?? {
     id: user.id,
     first_name: user.user_metadata?.first_name ?? "User",
