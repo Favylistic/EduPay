@@ -59,7 +59,8 @@ export function EmployeesTable({ profile }: { profile: Profile }) {
 
   const isAdmin = profile.role === "super_admin" || profile.role === "hr_manager"
 
-  const filtered = (employees ?? []).filter((emp) => {
+  const safeEmployees = Array.isArray(employees) ? employees : []
+  const filtered = safeEmployees.filter((emp) => {
     const matchesSearch =
       !search ||
       `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(search.toLowerCase()) ||

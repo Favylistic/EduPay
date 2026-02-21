@@ -107,7 +107,7 @@ export function DepartmentsTable({ canManage, canDelete }: DepartmentsTableProps
             </TableRow>
           </TableHeader>
           <TableBody>
-            {!departments ? (
+            {!departments || !Array.isArray(departments) ? (
               <TableRow>
                 <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                   Loading...
