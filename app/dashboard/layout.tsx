@@ -1,13 +1,8 @@
-import dynamic from "next/dynamic"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import type { Profile } from "@/lib/types"
-
-const AppSidebar = dynamic(
-  () => import("@/components/dashboard/app-sidebar").then((mod) => mod.AppSidebar),
-  { ssr: false }
-)
 
 export default async function DashboardLayout({
   children,
