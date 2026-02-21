@@ -23,7 +23,16 @@ export default async function EmployeesPage() {
     .eq("id", user.id)
     .single()
 
-  if (!profile) redirect("/auth/login")
+  const resolvedProfile: Profile = profile ?? {
+    id: user.id,
+    first_name: user.user_metadata?.first_name ?? "User",
+    last_name: user.user_metadata?.last_name ?? "",
+    role: user.user_metadata?.role ?? "staff",
+    email: user.email ?? "",
+    avatar_url: null,
+    created_at: user.created_at,
+    updated_at: user.created_at,
+  }
 
   return (
     <>
@@ -40,7 +49,7 @@ export default async function EmployeesPage() {
             Manage all employees, their departments, designations, and personal details.
           </p>
         </div>
-        <EmployeesTable profile={profile as Profile} />
+        <EmployeesTable profile={resolvedProfile} />
       </div>
     </>
   )

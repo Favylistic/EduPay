@@ -41,10 +41,15 @@ import { toast } from "sonner"
 import type { Employee, Profile } from "@/lib/types"
 import { EmployeeDialog } from "./employee-dialog"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
+const fetcher = (url: string) =>
+  fetch(url).then(async (r) => {
+    const json = await r.json()
+    if (!r.ok) throw new Error(json.error || "Failed to fetch")
+    return json
+  })
 
 export function EmployeesTable({ profile }: { profile: Profile }) {
-  const { data: employees, mutate } = useSWR<Employee[]>("/api/employees", fetcher)
+  const { data: employees, error: fetchError, mutate } = useSWR<Employee[]>("/api/employees", fetcher)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [typeFilter, setTypeFilter] = useState<string>("all")

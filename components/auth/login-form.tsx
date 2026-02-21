@@ -21,20 +21,39 @@ export function LoginForm() {
     setLoading(true)
     setError(null)
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (error) {
-      setError(error.message)
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      // Check if the user's email has been confirmed
+      if (data.user && !data.user.email_confirmed_at) {
+        await supabase.auth.signOut()
+        setError(
+          "Your email has not been verified yet. Please check your inbox and click the confirmation link before signing in."
+        )
+        setLoading(false)
+        return
+      }
+
+      router.push("/dashboard")
+      router.refresh()
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred during sign in"
+      )
       setLoading(false)
-      return
     }
-
-    router.push("/dashboard")
-    router.refresh()
   }
 
   return (

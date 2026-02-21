@@ -26,7 +26,12 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Loader2 } from "lucide-react"
 import type { Employee, Department, Designation } from "@/lib/types"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
+const fetcher = (url: string) =>
+  fetch(url).then(async (r) => {
+    const json = await r.json()
+    if (!r.ok) throw new Error(json.error || "Failed to fetch")
+    return json
+  })
 
 interface EmployeeDialogProps {
   open: boolean

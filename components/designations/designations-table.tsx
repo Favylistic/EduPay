@@ -33,7 +33,12 @@ import { Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 import { DesignationDialog } from "./designation-dialog"
 import type { Designation } from "@/lib/types"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
+const fetcher = (url: string) =>
+  fetch(url).then(async (r) => {
+    const json = await r.json()
+    if (!r.ok) throw new Error(json.error || "Failed to fetch")
+    return json
+  })
 
 function formatCurrency(val: number | null) {
   if (val === null || val === undefined) return "---"

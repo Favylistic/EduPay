@@ -29,29 +29,38 @@ export function SignUpForm() {
       return
     }
 
-    const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo:
-          process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-          `${window.location.origin}/dashboard`,
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          role: "staff",
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo:
+            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+            `${window.location.origin}/auth/callback?next=/dashboard`,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            role: "staff",
+          },
         },
-      },
-    })
+      })
 
-    if (error) {
-      setError(error.message)
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      router.push("/auth/sign-up-success")
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An error occurred during sign up"
+      )
       setLoading(false)
-      return
     }
-
-    router.push("/auth/sign-up-success")
   }
 
   return (

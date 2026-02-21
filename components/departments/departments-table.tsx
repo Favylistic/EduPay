@@ -33,7 +33,12 @@ import { Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
 import { DepartmentDialog } from "./department-dialog"
 import type { Department } from "@/lib/types"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
+const fetcher = (url: string) =>
+  fetch(url).then(async (r) => {
+    const json = await r.json()
+    if (!r.ok) throw new Error(json.error || "Failed to fetch")
+    return json
+  })
 
 interface DepartmentsTableProps {
   canManage: boolean

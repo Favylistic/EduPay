@@ -6,6 +6,7 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  // NEXT_PUBLIC_* environment variables are available in Edge middleware
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -33,10 +34,12 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const pathname = request.nextUrl.pathname
+
   // Public routes that don't require authentication
-  const publicRoutes = ["/", "/auth/login", "/auth/sign-up", "/auth/sign-up-success", "/auth/error"]
+  const publicRoutes = ["/", "/auth/login", "/auth/sign-up", "/auth/sign-up-success", "/auth/error", "/auth/callback"]
   const isPublicRoute = publicRoutes.some(
-    (route) => request.nextUrl.pathname === route
+    (route) => pathname === route
   )
 
   if (!user && !isPublicRoute) {
@@ -46,7 +49,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // If user is logged in and tries to access auth pages, redirect to dashboard
-  if (user && (request.nextUrl.pathname.startsWith("/auth/login") || request.nextUrl.pathname.startsWith("/auth/sign-up"))) {
+  if (user && (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/sign-up"))) {
     const url = request.nextUrl.clone()
     url.pathname = "/dashboard"
     return NextResponse.redirect(url)
