@@ -4,6 +4,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import type { Profile } from "@/lib/types"
 
+// Dashboard layout with Supabase auth and profile resolution
 export default async function DashboardLayout({
   children,
 }: {
