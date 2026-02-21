@@ -156,8 +156,8 @@ export function EmployeeDialog({
     onSuccess()
   }
 
-  const activeDepartments = departments?.filter((d) => d.is_active) ?? []
-  const activeDesignations = designations?.filter((d) => d.is_active) ?? []
+  const activeDepartments = Array.isArray(departments) ? departments.filter((d) => d.is_active) : []
+  const activeDesignations = Array.isArray(designations) ? designations.filter((d) => d.is_active) : []
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -117,7 +117,7 @@ export function DesignationsTable({ canManage, canDelete }: DesignationsTablePro
             </TableRow>
           </TableHeader>
           <TableBody>
-            {!designations ? (
+            {!designations || !Array.isArray(designations) ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                   Loading...
