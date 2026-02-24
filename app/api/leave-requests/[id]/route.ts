@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { writeAuditLog } from "@/lib/audit"
 
 const JOINS = `
   *,
@@ -78,6 +79,16 @@ export async function PUT(
       reference_id: id,
     })
   }
+
+  // Write audit log for leave status changes
+  const auditAction =
+    body.status === "approved" ? "leave_approved" as const :
+    body.status === "rejected" ? "leave_rejected" as const :
+    "leave_cancelled" as const
+  await writeAuditLog(auditAction, "leave_request", id, {
+    new_status: body.status,
+    employee_id: data.employee?.employee_id,
+  })
 
   return NextResponse.json(data)
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { writeAuditLog } from "@/lib/audit"
 
 export async function GET() {
   const supabase = await createClient()
@@ -84,6 +85,13 @@ export async function POST(request: Request) {
 
   const { error: slipError } = await supabase.from("payslips").insert(payslipRows)
   if (slipError) return NextResponse.json({ error: slipError.message }, { status: 400 })
+
+  await writeAuditLog("payroll_run_created", "payroll_run", run.id, {
+    month,
+    year,
+    total_employees: payslips.length,
+    total_net: Math.round(totalNet * 100) / 100,
+  })
 
   return NextResponse.json(run, { status: 201 })
 }

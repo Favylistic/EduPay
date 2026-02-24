@@ -10,6 +10,7 @@ import { ArrowLeft } from "lucide-react"
 import { MONTHS, formatCurrency } from "@/lib/types"
 import type { PayslipBreakdown } from "@/lib/types"
 import { PrintButton } from "@/components/payroll/print-button"
+import { DownloadPdfButton } from "@/components/payroll/download-pdf-button"
 
 export default async function PayslipDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -51,7 +52,13 @@ export default async function PayslipDetailPage({ params }: { params: Promise<{ 
             <ArrowLeft className="h-4 w-4 mr-2" /> Back to Run
           </Link>
         </Button>
-        <PrintButton />
+        <div className="flex items-center gap-2">
+          <DownloadPdfButton
+            payslipId={id}
+            filename={`Payslip_${emp?.employee_id ?? id}_${MONTHS[run.month - 1]}_${run.year}.html`}
+          />
+          <PrintButton />
+        </div>
       </div>
 
       {/* Printable payslip card */}
@@ -75,7 +82,7 @@ export default async function PayslipDetailPage({ params }: { params: Promise<{ 
           <Separator />
 
           {/* Employee info */}
-          <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
             <div>
               <p className="text-muted-foreground text-xs mb-0.5">Employee Name</p>
               <p className="font-semibold">{emp?.profile?.first_name} {emp?.profile?.last_name}</p>
@@ -107,7 +114,7 @@ export default async function PayslipDetailPage({ params }: { params: Promise<{ 
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
               Attendance
             </p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
                 { label: "Working Days", value: slip.working_days },
                 { label: "Present Days", value: slip.present_days },
@@ -127,7 +134,7 @@ export default async function PayslipDetailPage({ params }: { params: Promise<{ 
           <Separator />
 
           {/* Earnings & Deductions */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                 Earnings
