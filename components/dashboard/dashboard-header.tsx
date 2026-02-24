@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from "react"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -21,7 +22,7 @@ interface DashboardHeaderProps {
   breadcrumbs: BreadcrumbEntry[]
 }
 
-export function DashboardHeader({ breadcrumbs }: DashboardHeaderProps) {
+function HeaderContent({ breadcrumbs }: DashboardHeaderProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
       <SidebarTrigger className="-ml-1" />
@@ -47,7 +48,17 @@ export function DashboardHeader({ breadcrumbs }: DashboardHeaderProps) {
           })}
         </BreadcrumbList>
       </Breadcrumb>
-      <NotificationBell />
+      <Suspense fallback={<div className="h-9 w-9" />}>
+        <NotificationBell />
+      </Suspense>
     </header>
+  )
+}
+
+export function DashboardHeader({ breadcrumbs }: DashboardHeaderProps) {
+  return (
+    <Suspense fallback={<div className="h-14 border-b bg-background" />}>
+      <HeaderContent breadcrumbs={breadcrumbs} />
+    </Suspense>
   )
 }

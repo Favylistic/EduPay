@@ -26,6 +26,16 @@ const TYPE_ICONS: Record<string, string> = {
   general: "•",
 }
 
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return "just now"
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  return `${Math.floor(hrs / 24)}d ago`
+}
+
 export function NotificationBell() {
   const { data: notifications, mutate } = useSWR<Notification[]>(
     "/api/notifications",
@@ -60,19 +70,9 @@ export function NotificationBell() {
     mutate()
   }
 
-  function timeAgo(iso: string) {
-    const diff = Date.now() - new Date(iso).getTime()
-    const mins = Math.floor(diff / 60000)
-    if (mins < 1) return "just now"
-    if (mins < 60) return `${mins}m ago`
-    const hrs = Math.floor(mins / 60)
-    if (hrs < 24) return `${hrs}h ago`
-    return `${Math.floor(hrs / 24)}d ago`
-  }
-
   return (
     <Popover>
-      <PopoverTrigger asChild>
+      <PopoverTrigger asChild suppressHydrationWarning>
         <Button variant="ghost" size="icon" className="relative h-9 w-9">
           <Bell className="h-4 w-4" />
           {unread > 0 && (

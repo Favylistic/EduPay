@@ -77,7 +77,7 @@ export function TimeClock({ employeeId, employeeName }: TimeClockProps) {
         body: JSON.stringify({
           employee_id: employeeId,
           date: dateStr,
-          check_in: `${dateStr}T${timeStr}`,
+          check_in_time: `${dateStr}T${timeStr}`,
           status,
           latitude: location?.lat ?? null,
           longitude: location?.lng ?? null,
@@ -112,7 +112,7 @@ export function TimeClock({ employeeId, employeeName }: TimeClockProps) {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          check_out: `${dateStr}T${timeStr}`,
+          check_out_time: `${dateStr}T${timeStr}`,
           status: todayRecord.status,
           notes: notes.trim() || todayRecord.notes,
           latitude: location?.lat ?? todayRecord.latitude,
@@ -135,8 +135,8 @@ export function TimeClock({ employeeId, employeeName }: TimeClockProps) {
     }
   }
 
-  const isCheckedIn = !!todayRecord?.check_in
-  const isCheckedOut = !!todayRecord?.check_out
+  const isCheckedIn = !!todayRecord?.check_in_time
+  const isCheckedOut = !!todayRecord?.check_out_time
 
   function formatTime(isoString: string | null) {
     if (!isoString) return "--:--"
@@ -157,19 +157,19 @@ export function TimeClock({ employeeId, employeeName }: TimeClockProps) {
       {/* Live clock card */}
       <Card className="flex flex-col items-center justify-center py-8 gap-3">
         <Clock className="h-8 w-8 text-primary" />
-        <p className="text-5xl font-mono font-bold tracking-tight tabular-nums text-foreground">
+        <p className="text-5xl font-mono font-bold tracking-tight tabular-nums text-foreground" suppressHydrationWarning>
           {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground" suppressHydrationWarning>
           {now.toLocaleDateString([], { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </p>
         <p className="text-sm font-medium text-foreground">{employeeName}</p>
         {todayRecord && (
           <Badge
             variant="outline"
-            className={cn("mt-1", ATTENDANCE_STATUS_COLORS[todayRecord.status])}
+            className={cn("mt-1", todayRecord.status ? ATTENDANCE_STATUS_COLORS[todayRecord.status] : "")}
           >
-            {ATTENDANCE_STATUS_LABELS[todayRecord.status]}
+            {todayRecord.status ? ATTENDANCE_STATUS_LABELS[todayRecord.status] : "Not set"}
           </Badge>
         )}
       </Card>
@@ -185,13 +185,13 @@ export function TimeClock({ employeeId, employeeName }: TimeClockProps) {
             <div className="rounded-lg border p-3">
               <p className="text-xs text-muted-foreground mb-1">Check In</p>
               <p className="font-mono font-semibold text-foreground">
-                {formatTime(todayRecord?.check_in ?? null)}
+                {formatTime(todayRecord?.check_in_time ?? null)}
               </p>
             </div>
             <div className="rounded-lg border p-3">
               <p className="text-xs text-muted-foreground mb-1">Check Out</p>
               <p className="font-mono font-semibold text-foreground">
-                {formatTime(todayRecord?.check_out ?? null)}
+                {formatTime(todayRecord?.check_out_time ?? null)}
               </p>
             </div>
           </div>
@@ -200,7 +200,7 @@ export function TimeClock({ employeeId, employeeName }: TimeClockProps) {
             <div className="rounded-lg border p-3 text-sm">
               <p className="text-xs text-muted-foreground mb-1">Duration</p>
               <p className="font-semibold tabular-nums">
-                {formatDuration(todayRecord?.check_in ?? null, todayRecord?.check_out ?? null)}
+                {formatDuration(todayRecord?.check_in_time ?? null, todayRecord?.check_out_time ?? null)}
               </p>
             </div>
           )}

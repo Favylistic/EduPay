@@ -123,8 +123,8 @@ export interface AttendanceRecord {
   id: string
   employee_id: string
   date: string
-  check_in: string | null
-  check_out: string | null
+  check_in_time: string | null
+  check_out_time: string | null
   status: AttendanceStatus
   latitude: number | null
   longitude: number | null
