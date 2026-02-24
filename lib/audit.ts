@@ -34,6 +34,7 @@ export async function writeAuditLog(
 
     await supabase.from("audit_logs").insert({
       actor_id: user?.id ?? null,
+      actor_profile_id: user?.id ?? null,
       action,
       entity_type: entityType,
       entity_id: entityId,
