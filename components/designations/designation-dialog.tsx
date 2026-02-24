@@ -33,8 +33,6 @@ export function DesignationDialog({
   const isEdit = !!designation
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
-  const [salaryMin, setSalaryMin] = useState("")
-  const [salaryMax, setSalaryMax] = useState("")
   const [isActive, setIsActive] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,14 +41,10 @@ export function DesignationDialog({
     if (designation) {
       setTitle(designation.title)
       setDescription(designation.description || "")
-      setSalaryMin(designation.base_salary_min?.toString() || "")
-      setSalaryMax(designation.base_salary_max?.toString() || "")
       setIsActive(designation.is_active)
     } else {
       setTitle("")
       setDescription("")
-      setSalaryMin("")
-      setSalaryMax("")
       setIsActive(true)
     }
     setError(null)
@@ -61,17 +55,8 @@ export function DesignationDialog({
     setLoading(true)
     setError(null)
 
-    const body = {
-      title,
-      description,
-      base_salary_min: salaryMin ? parseFloat(salaryMin) : null,
-      base_salary_max: salaryMax ? parseFloat(salaryMax) : null,
-      is_active: isActive,
-    }
-
-    const url = isEdit
-      ? `/api/designations/${designation.id}`
-      : "/api/designations"
+    const body = { title, description, is_active: isActive }
+    const url = isEdit ? `/api/designations/${designation.id}` : "/api/designations"
     const method = isEdit ? "PUT" : "POST"
 
     const res = await fetch(url, {
@@ -96,9 +81,7 @@ export function DesignationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {isEdit ? "Edit Designation" : "Add Designation"}
-          </DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Designation" : "Add Designation"}</DialogTitle>
           <DialogDescription>
             {isEdit
               ? "Update the designation details below."
@@ -126,32 +109,6 @@ export function DesignationDialog({
               rows={3}
             />
           </div>
-          <div className="flex gap-3">
-            <div className="flex flex-1 flex-col gap-2">
-              <Label htmlFor="salary-min">Min Salary</Label>
-              <Input
-                id="salary-min"
-                type="number"
-                min="0"
-                step="0.01"
-                value={salaryMin}
-                onChange={(e) => setSalaryMin(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-            <div className="flex flex-1 flex-col gap-2">
-              <Label htmlFor="salary-max">Max Salary</Label>
-              <Input
-                id="salary-max"
-                type="number"
-                min="0"
-                step="0.01"
-                value={salaryMax}
-                onChange={(e) => setSalaryMax(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-          </div>
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div>
               <Label htmlFor="desig-active" className="text-sm font-medium">Active</Label>
@@ -169,11 +126,7 @@ export function DesignationDialog({
             <p className="text-sm text-destructive" role="alert">{error}</p>
           )}
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>

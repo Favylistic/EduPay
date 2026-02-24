@@ -36,9 +36,27 @@ import {
   LogOut,
   ChevronsUpDown,
   GraduationCap,
+  ShieldCheck,
+  Clock,
+  History,
+  BarChart2,
+  CalendarDays,
+  ClipboardCheck,
 } from "lucide-react"
 
-const NAV_MAIN = [
+interface NavItem {
+  title: string
+  href: string
+  icon: React.ElementType
+  adminOnly?: boolean
+}
+
+interface NavGroup {
+  label: string
+  items: NavItem[]
+}
+
+const NAV_MAIN: NavGroup[] = [
   {
     label: "Overview",
     items: [
@@ -51,6 +69,27 @@ const NAV_MAIN = [
       { title: "Employees", href: "/dashboard/employees", icon: Users },
       { title: "Departments", href: "/dashboard/departments", icon: Building2 },
       { title: "Designations", href: "/dashboard/designations", icon: Award },
+    ],
+  },
+  {
+    label: "Attendance",
+    items: [
+      { title: "Time Clock", href: "/dashboard/attendance", icon: Clock },
+      { title: "History", href: "/dashboard/attendance/history", icon: History },
+      { title: "Monthly Summary", href: "/dashboard/attendance/summary", icon: BarChart2 },
+    ],
+  },
+  {
+    label: "Leave",
+    items: [
+      { title: "My Leaves", href: "/dashboard/leaves", icon: CalendarDays },
+      { title: "Approvals", href: "/dashboard/leaves/approvals", icon: ClipboardCheck, adminOnly: true },
+    ],
+  },
+  {
+    label: "Administration",
+    items: [
+      { title: "User Management", href: "/dashboard/users", icon: ShieldCheck, adminOnly: true },
     ],
   },
 ]
@@ -98,35 +137,41 @@ export function AppSidebar({ profile }: AppSidebarProps) {
       </SidebarHeader>
       <SidebarSeparator />
       <SidebarContent>
-        {NAV_MAIN.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => {
-                  const isActive =
-                    item.href === "/dashboard"
-                      ? pathname === "/dashboard"
-                      : pathname.startsWith(item.href)
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        tooltip={item.title}
-                      >
-                        <Link href={item.href}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {NAV_MAIN.map((group) => {
+          const visibleItems = group.items.filter(
+            (item) => !item.adminOnly || profile.role === "super_admin" || profile.role === "hr_manager"
+          )
+          if (visibleItems.length === 0) return null
+          return (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {visibleItems.map((item) => {
+                    const isActive =
+                      item.href === "/dashboard"
+                        ? pathname === "/dashboard"
+                        : pathname.startsWith(item.href)
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          tooltip={item.title}
+                        >
+                          <Link href={item.href}>
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )
+        })}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>

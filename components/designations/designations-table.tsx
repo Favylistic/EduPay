@@ -29,7 +29,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { Plus, MoreHorizontal, Pencil, Trash2, Search } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import { DesignationDialog } from "./designation-dialog"
 import type { Designation } from "@/lib/types"
 
@@ -40,28 +41,22 @@ const fetcher = (url: string) =>
     return json
   })
 
-function formatCurrency(val: number | null) {
-  if (val === null || val === undefined) return "---"
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-  }).format(val)
-}
-
 interface DesignationsTableProps {
   canManage: boolean
   canDelete: boolean
 }
 
 export function DesignationsTable({ canManage, canDelete }: DesignationsTableProps) {
-  const { data: designations, mutate } = useSWR<Designation[]>(
-    "/api/designations",
-    fetcher
-  )
+  const { data: designations, mutate } = useSWR<Designation[]>("/api/designations", fetcher)
+  const [search, setSearch] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editDesig, setEditDesig] = useState<Designation | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+
+  const safeDesignations = Array.isArray(designations) ? designations : []
+  const filtered = safeDesignations.filter((d) =>
+    !search || d.title.toLowerCase().includes(search.toLowerCase())
+  )
 
   function handleEdit(desig: Designation) {
     setEditDesig(desig)
@@ -94,7 +89,7 @@ export function DesignationsTable({ canManage, canDelete }: DesignationsTablePro
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Designations</h1>
           <p className="text-sm text-muted-foreground">
-            Manage job titles and salary ranges
+            Manage job titles and designations
           </p>
         </div>
         {canManage && (
@@ -105,41 +100,45 @@ export function DesignationsTable({ canManage, canDelete }: DesignationsTablePro
         )}
       </div>
 
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search designations..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead className="hidden md:table-cell">Description</TableHead>
-              <TableHead className="hidden sm:table-cell">Salary Range</TableHead>
-              <TableHead>Status</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="font-semibold">Title</TableHead>
+              <TableHead className="font-semibold hidden md:table-cell">Description</TableHead>
+              <TableHead className="font-semibold">Status</TableHead>
               {canManage && <TableHead className="w-12" />}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {!designations || !Array.isArray(designations) ? (
+            {!designations ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={canManage ? 4 : 3} className="h-24 text-center text-muted-foreground">
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : designations.length === 0 ? (
+            ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                  No designations found. Add one to get started.
+                <TableCell colSpan={canManage ? 4 : 3} className="h-24 text-center text-muted-foreground">
+                  {search ? "No designations match your search." : "No designations found. Add one to get started."}
                 </TableCell>
               </TableRow>
             ) : (
-              designations.map((desig) => (
+              filtered.map((desig) => (
                 <TableRow key={desig.id}>
                   <TableCell className="font-medium">{desig.title}</TableCell>
-                  <TableCell className="hidden max-w-[300px] truncate md:table-cell">
+                  <TableCell className="hidden max-w-[300px] truncate md:table-cell text-muted-foreground text-sm">
                     {desig.description || "---"}
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    {desig.base_salary_min || desig.base_salary_max
-                      ? `${formatCurrency(desig.base_salary_min)} - ${formatCurrency(desig.base_salary_max)}`
-                      : "---"}
                   </TableCell>
                   <TableCell>
                     <Badge variant={desig.is_active ? "default" : "secondary"}>

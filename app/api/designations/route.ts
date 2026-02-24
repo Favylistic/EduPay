@@ -23,8 +23,6 @@ export async function POST(request: Request) {
     .insert({
       title: body.title,
       description: body.description || null,
-      base_salary_min: body.base_salary_min || null,
-      base_salary_max: body.base_salary_max || null,
       is_active: body.is_active ?? true,
     })
     .select()
