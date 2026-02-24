@@ -48,6 +48,7 @@ import {
   ListOrdered,
   LineChart,
   ScrollText,
+  Mail,
 } from "lucide-react"
 
 interface NavItem {
@@ -115,6 +116,13 @@ const NAV_MAIN: NavGroup[] = [
       { title: "User Management", href: "/dashboard/users", icon: ShieldCheck, adminOnly: true },
     ],
   },
+  {
+    label: "Personal",
+    items: [
+      { title: "My Profile", href: "/dashboard/profile", icon: Users },
+      { title: "Messages", href: "/dashboard/messages", icon: Mail },
+    ],
+  },
 ]
 
 interface AppSidebarProps {
@@ -173,7 +181,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {visibleItems.map((item) => {
-                    const exactMatch = ["/dashboard", "/dashboard/payroll", "/dashboard/analytics", "/dashboard/audit-logs"].includes(item.href)
+                    const exactMatch = ["/dashboard", "/dashboard/payroll", "/dashboard/analytics", "/dashboard/audit-logs", "/dashboard/profile", "/dashboard/messages"].includes(item.href)
                     const isActive = exactMatch
                       ? pathname === item.href
                       : pathname.startsWith(item.href)
