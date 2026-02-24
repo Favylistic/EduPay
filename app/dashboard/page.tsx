@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
+import { AdminOverviewCards } from "@/components/dashboard/admin-overview-cards"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { RecentEmployees } from "@/components/dashboard/recent-employees"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -176,22 +177,50 @@ export default async function DashboardPage() {
   }
 
   // Admin dashboard (existing code)
-  const [employeesRes, departmentsRes, designationsRes, recentRes, deptBreakdownRes] =
-    await Promise.all([
-      supabase.from("employees").select("id, is_active, base_salary"),
-      supabase.from("departments").select("id").eq("is_active", true),
-      supabase.from("designations").select("id").eq("is_active", true),
-      supabase
-        .from("employees")
-        .select("*, profile:profiles(id, first_name, last_name, email)")
-        .order("created_at", { ascending: false })
-        .limit(5),
-      supabase
-        .from("departments")
-        .select("id, name, is_active")
-        .eq("is_active", true)
-        .order("name"),
-    ])
+  // Fetch admin overview metrics in parallel
+  const today = new Date().toISOString().split("T")[0]
+
+  const [
+    employeesRes,
+    departmentsRes,
+    designationsRes,
+    recentRes,
+    deptBreakdownRes,
+    presentRes,
+    pendingLeavesRes,
+    unreadMessagesRes,
+  ] = await Promise.all([
+    supabase.from("employees").select("id, is_active, base_salary"),
+    supabase.from("departments").select("id").eq("is_active", true),
+    supabase.from("designations").select("id").eq("is_active", true),
+    supabase
+      .from("employees")
+      .select("*, profile:profiles(id, first_name, last_name, email)")
+      .order("created_at", { ascending: false })
+      .limit(5),
+    supabase
+      .from("departments")
+      .select("id, name, is_active")
+      .eq("is_active", true)
+      .order("name"),
+    // Present employees today (have check_in_time)
+    supabase
+      .from("attendance_records")
+      .select("id", { count: "exact", head: true })
+      .eq("date", today)
+      .not("check_in_time", "is", null),
+    // Pending leave requests
+    supabase
+      .from("leave_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+    // Unread messages for current user
+    supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("receiver_id", user.id)
+      .is("read_at", null),
+  ])
 
   const employees = employeesRes.data ?? []
   const totalEmployees = employees.length
@@ -204,6 +233,12 @@ export default async function DashboardPage() {
   const recentEmployees = (recentRes.data ?? []) as Employee[]
   const departments = deptBreakdownRes.data ?? []
 
+  // Calculate admin overview metrics
+  const presentEmployees = presentRes.count ?? 0
+  const absentEmployees = Math.max(0, activeEmployees - presentEmployees)
+  const pendingLeaves = pendingLeavesRes.count ?? 0
+  const unreadMessages = unreadMessagesRes.count ?? 0
+
   return (
     <>
       <DashboardHeader breadcrumbs={[{ label: "Dashboard" }]} />
@@ -214,6 +249,16 @@ export default async function DashboardPage() {
             Overview of your school payroll system
           </p>
         </div>
+
+        {/* Admin Overview Metrics */}
+        <AdminOverviewCards
+          presentEmployees={presentEmployees}
+          absentEmployees={absentEmployees}
+          pendingLeaves={pendingLeaves}
+          unreadMessages={unreadMessages}
+        />
+
+        {/* Full Stats Cards */}
         <StatsCards
           totalEmployees={totalEmployees}
           activeEmployees={activeEmployees}
@@ -221,6 +266,7 @@ export default async function DashboardPage() {
           totalDesignations={totalDesignations}
           totalPayroll={totalPayroll}
         />
+
         <div className="grid gap-6 lg:grid-cols-2">
           <RecentEmployees employees={recentEmployees} />
           <Card>
