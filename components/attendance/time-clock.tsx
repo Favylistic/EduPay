@@ -157,10 +157,10 @@ export function TimeClock({ employeeId, employeeName }: TimeClockProps) {
       {/* Live clock card */}
       <Card className="flex flex-col items-center justify-center py-8 gap-3">
         <Clock className="h-8 w-8 text-primary" />
-        <p className="text-5xl font-mono font-bold tracking-tight tabular-nums text-foreground">
+        <p className="text-5xl font-mono font-bold tracking-tight tabular-nums text-foreground" suppressHydrationWarning>
           {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground" suppressHydrationWarning>
           {now.toLocaleDateString([], { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </p>
         <p className="text-sm font-medium text-foreground">{employeeName}</p>
