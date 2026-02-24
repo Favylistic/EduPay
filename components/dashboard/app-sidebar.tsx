@@ -42,6 +42,10 @@ import {
   BarChart2,
   CalendarDays,
   ClipboardCheck,
+  DollarSign,
+  Play,
+  Settings2,
+  ListOrdered,
 } from "lucide-react"
 
 interface NavItem {
@@ -84,6 +88,15 @@ const NAV_MAIN: NavGroup[] = [
     items: [
       { title: "My Leaves", href: "/dashboard/leaves", icon: CalendarDays },
       { title: "Approvals", href: "/dashboard/leaves/approvals", icon: ClipboardCheck, adminOnly: true },
+    ],
+  },
+  {
+    label: "Payroll",
+    items: [
+      { title: "Overview", href: "/dashboard/payroll", icon: DollarSign, adminOnly: true },
+      { title: "Run Payroll", href: "/dashboard/payroll/run", icon: Play, adminOnly: true },
+      { title: "History", href: "/dashboard/payroll/history", icon: ListOrdered, adminOnly: true },
+      { title: "Components", href: "/dashboard/payroll/components", icon: Settings2, adminOnly: true },
     ],
   },
   {
@@ -148,10 +161,10 @@ export function AppSidebar({ profile }: AppSidebarProps) {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {visibleItems.map((item) => {
-                    const isActive =
-                      item.href === "/dashboard"
-                        ? pathname === "/dashboard"
-                        : pathname.startsWith(item.href)
+                    const exactMatch = ["/dashboard", "/dashboard/payroll"].includes(item.href)
+                    const isActive = exactMatch
+                      ? pathname === item.href
+                      : pathname.startsWith(item.href)
                     return (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton

@@ -217,3 +217,114 @@ export interface Notification {
   reference_id: string | null
   created_at: string
 }
+
+// ─── Phase 4: Payroll ─────────────────────────────────────────────────────────
+
+export type ComponentType = "earning" | "deduction"
+export type ComponentCalculationType = "fixed" | "percentage_of_base"
+export type ComponentAppliesTo = "all" | "academic" | "non_academic"
+export type PayrollRunStatus = "draft" | "processing" | "completed" | "cancelled"
+
+export interface SalaryComponent {
+  id: string
+  name: string
+  type: ComponentType
+  calculation_type: ComponentCalculationType
+  value: number
+  applies_to: ComponentAppliesTo
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface EmployeeSalaryComponent {
+  id: string
+  employee_id: string
+  component_id: string
+  override_value: number | null  // null = use component default
+  is_active: boolean
+  created_at: string
+  component?: Pick<SalaryComponent, "id" | "name" | "type" | "calculation_type" | "value"> | null
+}
+
+export interface PayslipLineItem {
+  component_id: string
+  name: string
+  type: ComponentType
+  calculation_type: ComponentCalculationType
+  base_value: number
+  computed_amount: number
+}
+
+export interface PayslipBreakdown {
+  base_salary: number
+  attendance_deduction: number
+  earnings: PayslipLineItem[]
+  deductions: PayslipLineItem[]
+  gross_earnings: number
+  total_deductions: number
+  net_pay: number
+}
+
+export interface Payslip {
+  id: string
+  payroll_run_id: string
+  employee_id: string
+  base_salary: number
+  gross_earnings: number
+  total_deductions: number
+  net_pay: number
+  working_days: number
+  present_days: number
+  absent_days: number
+  late_days: number
+  leave_days: number
+  breakdown: PayslipBreakdown
+  status: "generated" | "paid"
+  created_at: string
+  // Joined
+  payroll_run?: Pick<PayrollRun, "id" | "month" | "year"> | null
+  employee?: Pick<Employee, "id" | "employee_id" | "bank_name" | "bank_account_number"> & {
+    profile?: Pick<Profile, "id" | "first_name" | "last_name" | "email"> | null
+    department?: Pick<Department, "id" | "name"> | null
+    designation?: Pick<Designation, "id" | "title"> | null
+  }
+}
+
+export interface PayrollRun {
+  id: string
+  month: number     // 1–12
+  year: number
+  status: PayrollRunStatus
+  total_employees: number | null
+  total_gross: number | null
+  total_deductions: number | null
+  total_net: number | null
+  notes: string | null
+  run_by: string | null
+  completed_at: string | null
+  created_at: string
+  updated_at: string
+  // Joined
+  runner?: Pick<Profile, "id" | "first_name" | "last_name"> | null
+  payslips?: Payslip[]
+}
+
+export const PAYROLL_STATUS_LABELS: Record<PayrollRunStatus, string> = {
+  draft: "Draft",
+  processing: "Processing",
+  completed: "Completed",
+  cancelled: "Cancelled",
+}
+
+export const PAYROLL_STATUS_COLORS: Record<PayrollRunStatus, string> = {
+  draft: "bg-muted text-muted-foreground",
+  processing: "bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400",
+  completed: "bg-green-500/10 text-green-700 border-green-500/20 dark:text-green-400",
+  cancelled: "bg-destructive/10 text-destructive border-destructive/20",
+}
+
+export const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+]
