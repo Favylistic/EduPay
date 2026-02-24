@@ -1,8 +1,9 @@
 -- =============================================================
 -- 017_seed_demo_data.sql
 -- EduPay Comprehensive Demo Data Seed
--- Run this in the Supabase SQL Editor (Service Role / bypasses RLS)
--- All FK chains are resolved via explicit UUIDs defined upfront.
+-- Run via Supabase Service Role (bypasses RLS).
+-- profiles are NOT seeded here — they require auth.users rows.
+-- Employees are seeded with profile_id = NULL (nullable column).
 -- =============================================================
 
 -- ─── Safety: wipe existing seed data if re-running ────────────────────────────
@@ -12,7 +13,6 @@ DELETE FROM employee_salary_components WHERE employee_id IN (SELECT id FROM empl
 DELETE FROM attendance_records   WHERE employee_id IN (SELECT id FROM employees WHERE employee_id LIKE 'EP-%');
 DELETE FROM leave_requests       WHERE employee_id IN (SELECT id FROM employees WHERE employee_id LIKE 'EP-%');
 DELETE FROM employees            WHERE employee_id LIKE 'EP-%';
-DELETE FROM profiles             WHERE email LIKE '%@edupay.school';
 DELETE FROM departments          WHERE name IN ('Administration','Mathematics','Sciences','Languages','Support Staff');
 DELETE FROM designations         WHERE title IN ('Principal','Vice Principal','HR Manager','Senior Teacher','Junior Teacher','Lab Technician','Head of Department','Administrative Officer','Librarian','Janitor');
 
@@ -44,48 +44,20 @@ INSERT INTO designations (id, title, description, is_active) VALUES
   ('b1000000-0000-0000-0000-000000000010', 'Janitor',                 'Facilities cleaning and maintenance',                    true);
 
 
--- =============================================================
--- 3. PROFILES  (20 employees — no auth.users entries needed for demo)
--- These profiles are inserted directly; profile_id on employees links here.
--- =============================================================
-INSERT INTO profiles (id, first_name, last_name, email, role) VALUES
-  -- Administration (super_admin / hr_manager)
-  ('c1000000-0000-0000-0000-000000000001', 'Margaret', 'Okonkwo',   'margaret.okonkwo@edupay.school',   'super_admin'),
-  ('c1000000-0000-0000-0000-000000000002', 'David',    'Mensah',    'david.mensah@edupay.school',       'hr_manager'),
-  ('c1000000-0000-0000-0000-000000000003', 'Fatima',   'Al-Hassan', 'fatima.alhassan@edupay.school',    'staff'),
-  -- Mathematics
-  ('c1000000-0000-0000-0000-000000000004', 'James',    'Kariuki',   'james.kariuki@edupay.school',      'teacher'),
-  ('c1000000-0000-0000-0000-000000000005', 'Amara',    'Diallo',    'amara.diallo@edupay.school',       'teacher'),
-  ('c1000000-0000-0000-0000-000000000006', 'Priya',    'Nair',      'priya.nair@edupay.school',         'teacher'),
-  -- Sciences
-  ('c1000000-0000-0000-0000-000000000007', 'Samuel',   'Acheampong','samuel.acheampong@edupay.school',  'teacher'),
-  ('c1000000-0000-0000-0000-000000000008', 'Lindiwe',  'Dlamini',   'lindiwe.dlamini@edupay.school',    'teacher'),
-  ('c1000000-0000-0000-0000-000000000009', 'Omar',     'Farouk',    'omar.farouk@edupay.school',        'staff'),
-  -- Languages
-  ('c1000000-0000-0000-0000-000000000010', 'Claire',   'Beaumont',  'claire.beaumont@edupay.school',    'teacher'),
-  ('c1000000-0000-0000-0000-000000000011', 'Kofi',     'Asante',    'kofi.asante@edupay.school',        'teacher'),
-  ('c1000000-0000-0000-0000-000000000012', 'Yuki',     'Tanaka',    'yuki.tanaka@edupay.school',        'teacher'),
-  -- Support Staff
-  ('c1000000-0000-0000-0000-000000000013', 'Beatrice', 'Owusu',     'beatrice.owusu@edupay.school',     'staff'),
-  ('c1000000-0000-0000-0000-000000000014', 'Emmanuel', 'Nkrumah',   'emmanuel.nkrumah@edupay.school',   'staff'),
-  -- Additional staff across depts
-  ('c1000000-0000-0000-0000-000000000015', 'Aisha',    'Balogun',   'aisha.balogun@edupay.school',      'teacher'),
-  ('c1000000-0000-0000-0000-000000000016', 'Patrick',  'Kimani',    'patrick.kimani@edupay.school',     'teacher'),
-  ('c1000000-0000-0000-0000-000000000017', 'Nadia',    'Petrov',    'nadia.petrov@edupay.school',       'teacher'),
-  ('c1000000-0000-0000-0000-000000000018', 'Felix',    'Adeola',    'felix.adeola@edupay.school',       'staff'),
-  ('c1000000-0000-0000-0000-000000000019', 'Grace',    'Mwangi',    'grace.mwangi@edupay.school',       'teacher'),
-  ('c1000000-0000-0000-0000-000000000020', 'Ibrahim',  'Sesay',     'ibrahim.sesay@edupay.school',      'staff');
+-- NOTE: profiles (section 3) is intentionally omitted — profiles.id has a
+-- FK to auth.users(id) which cannot be satisfied without real Supabase Auth users.
+-- Employees are seeded with profile_id = NULL (the column is nullable).
 
 
 -- =============================================================
 -- 4. EMPLOYEES  (20 records linked to profiles above)
 -- =============================================================
+-- profile_id omitted (nullable — no auth.users rows available in demo seed)
 INSERT INTO employees (
-  id, profile_id, employee_id, department_id, designation_id,
+  id, employee_id, department_id, designation_id,
   staff_type, gender, date_of_birth, date_joined, employment_status,
   salary_basis, base_salary, bank_name, tax_id,
-  phone, address, emergency_contact_name, emergency_contact_phone,
-  is_active
+  phone, address, emergency_contact_name, emergency_contact_phone
 ) VALUES
 
 -- ── Administration ──────────────────────────────────────────────────────────
@@ -93,7 +65,6 @@ INSERT INTO employees (
 -- EP-001  Margaret Okonkwo  |  Principal  |  Super Admin
 (
   'd1000000-0000-0000-0000-000000000001',
-  'c1000000-0000-0000-0000-000000000001',
   'EP-001',
   'a1000000-0000-0000-0000-000000000001',
   'b1000000-0000-0000-0000-000000000001',
@@ -101,14 +72,12 @@ INSERT INTO employees (
   'active', 'monthly', 6500.00,
   'First National Bank', 'TAX-001-MO',
   '+233-244-100001', '12 School Lane, Accra',
-  'Kwame Okonkwo', '+233-244-200001',
-  true
+  'Kwame Okonkwo', '+233-244-200001'
 ),
 
 -- EP-002  David Mensah  |  HR Manager
 (
   'd1000000-0000-0000-0000-000000000002',
-  'c1000000-0000-0000-0000-000000000002',
   'EP-002',
   'a1000000-0000-0000-0000-000000000001',
   'b1000000-0000-0000-0000-000000000003',
@@ -116,14 +85,12 @@ INSERT INTO employees (
   'active', 'monthly', 4800.00,
   'Ghana Commercial Bank', 'TAX-002-DM',
   '+233-244-100002', '5 HR Close, Kumasi',
-  'Ama Mensah', '+233-244-200002',
-  true
+  'Ama Mensah', '+233-244-200002'
 ),
 
 -- EP-003  Fatima Al-Hassan  |  Admin Officer  (on leave scenario)
 (
   'd1000000-0000-0000-0000-000000000003',
-  'c1000000-0000-0000-0000-000000000003',
   'EP-003',
   'a1000000-0000-0000-0000-000000000001',
   'b1000000-0000-0000-0000-000000000008',
@@ -131,8 +98,7 @@ INSERT INTO employees (
   'active', 'monthly', 2800.00,
   'Stanbic Bank', 'TAX-003-FA',
   '+233-244-100003', '8 Admin Road, Accra',
-  'Yusuf Al-Hassan', '+233-244-200003',
-  true
+  'Yusuf Al-Hassan', '+233-244-200003'
 ),
 
 -- ── Mathematics ─────────────────────────────────────────────────────────────
@@ -140,7 +106,6 @@ INSERT INTO employees (
 -- EP-004  James Kariuki  |  Head of Department (Maths)
 (
   'd1000000-0000-0000-0000-000000000004',
-  'c1000000-0000-0000-0000-000000000004',
   'EP-004',
   'a1000000-0000-0000-0000-000000000002',
   'b1000000-0000-0000-0000-000000000004',
@@ -148,14 +113,12 @@ INSERT INTO employees (
   'active', 'monthly', 4200.00,
   'Equity Bank', 'TAX-004-JK',
   '+254-700-100004', '23 Maths Ave, Nairobi',
-  'Wanjiku Kariuki', '+254-700-200004',
-  true
+  'Wanjiku Kariuki', '+254-700-200004'
 ),
 
 -- EP-005  Amara Diallo  |  Senior Teacher (Maths)
 (
   'd1000000-0000-0000-0000-000000000005',
-  'c1000000-0000-0000-0000-000000000005',
   'EP-005',
   'a1000000-0000-0000-0000-000000000002',
   'b1000000-0000-0000-0000-000000000005',
@@ -163,14 +126,12 @@ INSERT INTO employees (
   'active', 'monthly', 3600.00,
   'Ecobank', 'TAX-005-AD',
   '+221-77-100005', '14 Teacher St, Dakar',
-  'Kadiatou Diallo', '+221-77-200005',
-  true
+  'Kadiatou Diallo', '+221-77-200005'
 ),
 
 -- EP-006  Priya Nair  |  Junior Teacher (Maths) — late attendance scenario
 (
   'd1000000-0000-0000-0000-000000000006',
-  'c1000000-0000-0000-0000-000000000006',
   'EP-006',
   'a1000000-0000-0000-0000-000000000002',
   'b1000000-0000-0000-0000-000000000006',
@@ -178,8 +139,7 @@ INSERT INTO employees (
   'active', 'monthly', 2600.00,
   'HDFC Bank', 'TAX-006-PN',
   '+91-98765-100006', 'Flat 3B, Teachers Colony, Mumbai',
-  'Rajan Nair', '+91-98765-200006',
-  true
+  'Rajan Nair', '+91-98765-200006'
 ),
 
 -- ── Sciences ────────────────────────────────────────────────────────────────
@@ -187,7 +147,6 @@ INSERT INTO employees (
 -- EP-007  Samuel Acheampong  |  Head of Department (Sciences)
 (
   'd1000000-0000-0000-0000-000000000007',
-  'c1000000-0000-0000-0000-000000000007',
   'EP-007',
   'a1000000-0000-0000-0000-000000000003',
   'b1000000-0000-0000-0000-000000000004',
@@ -195,14 +154,12 @@ INSERT INTO employees (
   'active', 'monthly', 4200.00,
   'Zenith Bank', 'TAX-007-SA',
   '+233-244-100007', '7 Science Park, Accra',
-  'Abena Acheampong', '+233-244-200007',
-  true
+  'Abena Acheampong', '+233-244-200007'
 ),
 
 -- EP-008  Lindiwe Dlamini  |  Senior Teacher (Sciences)
 (
   'd1000000-0000-0000-0000-000000000008',
-  'c1000000-0000-0000-0000-000000000008',
   'EP-008',
   'a1000000-0000-0000-0000-000000000003',
   'b1000000-0000-0000-0000-000000000005',
@@ -210,14 +167,12 @@ INSERT INTO employees (
   'active', 'monthly', 3600.00,
   'ABSA Bank', 'TAX-008-LD',
   '+27-71-100008', '19 Lab Crescent, Johannesburg',
-  'Sibusiso Dlamini', '+27-71-200008',
-  true
+  'Sibusiso Dlamini', '+27-71-200008'
 ),
 
 -- EP-009  Omar Farouk  |  Lab Technician — half-day scenario
 (
   'd1000000-0000-0000-0000-000000000009',
-  'c1000000-0000-0000-0000-000000000009',
   'EP-009',
   'a1000000-0000-0000-0000-000000000003',
   'b1000000-0000-0000-0000-000000000007',
@@ -225,8 +180,7 @@ INSERT INTO employees (
   'active', 'monthly', 2200.00,
   'CIB Bank', 'TAX-009-OF',
   '+20-100-100009', '44 Cairo Ave, Cairo',
-  'Hana Farouk', '+20-100-200009',
-  true
+  'Hana Farouk', '+20-100-200009'
 ),
 
 -- ── Languages ───────────────────────────────────────────────────────────────
@@ -234,7 +188,6 @@ INSERT INTO employees (
 -- EP-010  Claire Beaumont  |  Head of Department (Languages)
 (
   'd1000000-0000-0000-0000-000000000010',
-  'c1000000-0000-0000-0000-000000000010',
   'EP-010',
   'a1000000-0000-0000-0000-000000000004',
   'b1000000-0000-0000-0000-000000000004',
@@ -242,14 +195,12 @@ INSERT INTO employees (
   'active', 'monthly', 4200.00,
   'BNP Paribas', 'TAX-010-CB',
   '+33-6-10001000', '3 Rue des Profs, Paris',
-  'Pierre Beaumont', '+33-6-20002000',
-  true
+  'Pierre Beaumont', '+33-6-20002000'
 ),
 
 -- EP-011  Kofi Asante  |  Senior Teacher (Languages)
 (
   'd1000000-0000-0000-0000-000000000011',
-  'c1000000-0000-0000-0000-000000000011',
   'EP-011',
   'a1000000-0000-0000-0000-000000000004',
   'b1000000-0000-0000-0000-000000000005',
@@ -257,14 +208,12 @@ INSERT INTO employees (
   'active', 'monthly', 3600.00,
   'Ghana Commercial Bank', 'TAX-011-KA',
   '+233-244-100011', '30 Literature Rd, Accra',
-  'Akosua Asante', '+233-244-200011',
-  true
+  'Akosua Asante', '+233-244-200011'
 ),
 
 -- EP-012  Yuki Tanaka  |  Junior Teacher (Languages)
 (
   'd1000000-0000-0000-0000-000000000012',
-  'c1000000-0000-0000-0000-000000000012',
   'EP-012',
   'a1000000-0000-0000-0000-000000000004',
   'b1000000-0000-0000-0000-000000000006',
@@ -272,8 +221,7 @@ INSERT INTO employees (
   'active', 'monthly', 2600.00,
   'Mizuho Bank', 'TAX-012-YT',
   '+81-90-10001200', '12 Sensei St, Tokyo',
-  'Hiroshi Tanaka', '+81-90-20002000',
-  true
+  'Hiroshi Tanaka', '+81-90-20002000'
 ),
 
 -- ── Support Staff ───────────────────────────────────────────────────────────
@@ -281,7 +229,6 @@ INSERT INTO employees (
 -- EP-013  Beatrice Owusu  |  Librarian
 (
   'd1000000-0000-0000-0000-000000000013',
-  'c1000000-0000-0000-0000-000000000013',
   'EP-013',
   'a1000000-0000-0000-0000-000000000005',
   'b1000000-0000-0000-0000-000000000009',
@@ -289,14 +236,12 @@ INSERT INTO employees (
   'active', 'monthly', 2400.00,
   'Fidelity Bank', 'TAX-013-BO',
   '+233-244-100013', '6 Library Close, Accra',
-  'Kweku Owusu', '+233-244-200013',
-  true
+  'Kweku Owusu', '+233-244-200013'
 ),
 
 -- EP-014  Emmanuel Nkrumah  |  Janitor (absent scenario)
 (
   'd1000000-0000-0000-0000-000000000014',
-  'c1000000-0000-0000-0000-000000000014',
   'EP-014',
   'a1000000-0000-0000-0000-000000000005',
   'b1000000-0000-0000-0000-000000000010',
@@ -304,14 +249,12 @@ INSERT INTO employees (
   'active', 'monthly', 1400.00,
   'Access Bank', 'TAX-014-EN',
   '+233-244-100014', '2 Maintenance Lane, Kumasi',
-  'Akua Nkrumah', '+233-244-200014',
-  true
+  'Akua Nkrumah', '+233-244-200014'
 ),
 
 -- EP-015  Aisha Balogun  |  Senior Teacher (Sciences extra)
 (
   'd1000000-0000-0000-0000-000000000015',
-  'c1000000-0000-0000-0000-000000000015',
   'EP-015',
   'a1000000-0000-0000-0000-000000000003',
   'b1000000-0000-0000-0000-000000000005',
@@ -319,14 +262,12 @@ INSERT INTO employees (
   'active', 'monthly', 3600.00,
   'GTBank', 'TAX-015-AB',
   '+234-80-100015', '77 University Rd, Lagos',
-  'Chukwu Balogun', '+234-80-200015',
-  true
+  'Chukwu Balogun', '+234-80-200015'
 ),
 
 -- EP-016  Patrick Kimani  |  Senior Teacher (Maths extra)
 (
   'd1000000-0000-0000-0000-000000000016',
-  'c1000000-0000-0000-0000-000000000016',
   'EP-016',
   'a1000000-0000-0000-0000-000000000002',
   'b1000000-0000-0000-0000-000000000005',
@@ -334,14 +275,12 @@ INSERT INTO employees (
   'active', 'monthly', 3600.00,
   'KCB Bank', 'TAX-016-PK',
   '+254-700-100016', '10 Algebra St, Nairobi',
-  'Grace Kimani', '+254-700-200016',
-  true
+  'Grace Kimani', '+254-700-200016'
 ),
 
 -- EP-017  Nadia Petrov  |  Junior Teacher (Languages extra)
 (
   'd1000000-0000-0000-0000-000000000017',
-  'c1000000-0000-0000-0000-000000000017',
   'EP-017',
   'a1000000-0000-0000-0000-000000000004',
   'b1000000-0000-0000-0000-000000000006',
@@ -349,14 +288,12 @@ INSERT INTO employees (
   'active', 'monthly', 2600.00,
   'Sberbank', 'TAX-017-NP',
   '+7-916-100017', 'Flat 5, Teacher Housing, Moscow',
-  'Alexei Petrov', '+7-916-200017',
-  true
+  'Alexei Petrov', '+7-916-200017'
 ),
 
 -- EP-018  Felix Adeola  |  Administrative Officer (Support)
 (
   'd1000000-0000-0000-0000-000000000018',
-  'c1000000-0000-0000-0000-000000000018',
   'EP-018',
   'a1000000-0000-0000-0000-000000000005',
   'b1000000-0000-0000-0000-000000000008',
@@ -364,14 +301,12 @@ INSERT INTO employees (
   'active', 'monthly', 2800.00,
   'Access Bank', 'TAX-018-FA',
   '+234-80-100018', '3 Admin Block, Lagos',
-  'Funmi Adeola', '+234-80-200018',
-  true
+  'Funmi Adeola', '+234-80-200018'
 ),
 
 -- EP-019  Grace Mwangi  |  Vice Principal
 (
   'd1000000-0000-0000-0000-000000000019',
-  'c1000000-0000-0000-0000-000000000019',
   'EP-019',
   'a1000000-0000-0000-0000-000000000001',
   'b1000000-0000-0000-0000-000000000002',
@@ -379,14 +314,12 @@ INSERT INTO employees (
   'active', 'monthly', 5500.00,
   'Equity Bank Kenya', 'TAX-019-GM',
   '+254-700-100019', '8 Deputy Drive, Nairobi',
-  'John Mwangi', '+254-700-200019',
-  true
+  'John Mwangi', '+254-700-200019'
 ),
 
 -- EP-020  Ibrahim Sesay  |  Janitor (Support)
 (
   'd1000000-0000-0000-0000-000000000020',
-  'c1000000-0000-0000-0000-000000000020',
   'EP-020',
   'a1000000-0000-0000-0000-000000000005',
   'b1000000-0000-0000-0000-000000000010',
@@ -394,17 +327,11 @@ INSERT INTO employees (
   'active', 'monthly', 1400.00,
   'Rokel Commercial Bank', 'TAX-020-IS',
   '+232-76-100020', '5 Grounds Rd, Freetown',
-  'Mariama Sesay', '+232-76-200020',
-  true
+  'Mariama Sesay', '+232-76-200020'
 );
 
-
--- Set department heads now that employees exist
-UPDATE departments SET head_id = 'c1000000-0000-0000-0000-000000000001' WHERE id = 'a1000000-0000-0000-0000-000000000001';
-UPDATE departments SET head_id = 'c1000000-0000-0000-0000-000000000004' WHERE id = 'a1000000-0000-0000-0000-000000000002';
-UPDATE departments SET head_id = 'c1000000-0000-0000-0000-000000000007' WHERE id = 'a1000000-0000-0000-0000-000000000003';
-UPDATE departments SET head_id = 'c1000000-0000-0000-0000-000000000010' WHERE id = 'a1000000-0000-0000-0000-000000000004';
-UPDATE departments SET head_id = 'c1000000-0000-0000-0000-000000000013' WHERE id = 'a1000000-0000-0000-0000-000000000005';
+-- NOTE: departments.head_id references profiles(id) which requires auth.users.
+-- Department head assignments are omitted from this seed.
 
 
 -- =============================================================
@@ -532,9 +459,10 @@ INSERT INTO attendance_records (employee_id, date, check_in_time, check_out_time
 -- 6. LEAVE REQUESTS  (5 varied requests)
 -- leave_type IDs from the seeded leave_types (name-based lookup)
 -- =============================================================
+-- reviewed_by omitted — it references profiles(id) which requires auth.users
 INSERT INTO leave_requests (
   id, employee_id, leave_type_id, start_date, end_date, total_days,
-  reason, status, reviewed_by, reviewed_at, review_notes
+  reason, status, reviewed_at, review_notes
 ) VALUES
 
 -- (1) EP-005 Amara Diallo — Sick leave, approved (ties to attendance on_leave rows above)
@@ -545,7 +473,6 @@ INSERT INTO leave_requests (
   '2025-01-29', '2025-01-30', 2,
   'Persistent fever and doctor-advised rest.',
   'approved',
-  'c1000000-0000-0000-0000-000000000002',
   '2025-01-27 09:15:00+00',
   'Approved — medical certificate provided.'
 ),
@@ -558,7 +485,7 @@ INSERT INTO leave_requests (
   '2025-02-10', '2025-02-11', 2,
   'Personal family event — sibling wedding.',
   'pending',
-  NULL, NULL, NULL
+  NULL, NULL
 ),
 
 -- (3) EP-012 Yuki Tanaka — Vacation leave, approved
@@ -569,12 +496,11 @@ INSERT INTO leave_requests (
   '2025-04-07', '2025-04-18', 10,
   'Annual family vacation — planned well in advance.',
   'approved',
-  'c1000000-0000-0000-0000-000000000002',
   '2025-03-01 10:00:00+00',
   'Approved — term break period, substitute arranged.'
 ),
 
--- (4) EP-014 Emmanuel Nkrumah — Sick leave, rejected (excessive unexcused absence pattern)
+-- (4) EP-014 Emmanuel Nkrumah — Sick leave, rejected
 (
   'e1000000-0000-0000-0000-000000000004',
   'd1000000-0000-0000-0000-000000000014',
@@ -582,7 +508,6 @@ INSERT INTO leave_requests (
   '2025-01-27', '2025-01-27', 1,
   'Not feeling well.',
   'rejected',
-  'c1000000-0000-0000-0000-000000000001',
   '2025-01-28 08:30:00+00',
   'Rejected — absence taken without prior notice; third occurrence this month.'
 ),
@@ -595,7 +520,7 @@ INSERT INTO leave_requests (
   '2025-02-03', '2025-02-05', 3,
   'Critical illness of parent — requires immediate travel.',
   'pending',
-  NULL, NULL, NULL
+  NULL, NULL
 );
 
 
@@ -631,21 +556,19 @@ ON CONFLICT (employee_id, component_id) DO NOTHING;
 -- =============================================================
 -- 8. PAYROLL RUN — January 2025  (completed)
 -- =============================================================
+-- run_by omitted — it references profiles(id) which requires auth.users
 INSERT INTO payroll_runs (
   id, month, year, status,
   total_employees, total_gross, total_deductions, total_net,
-  notes, run_by, completed_at
+  notes, completed_at
 ) VALUES (
-  'f1000000-0000-0000-0000-000000000001',
+  'e5100000-0000-0000-0000-000000000001',
   1, 2025, 'completed',
   20,
-  -- total_gross = sum of (base_salary + HRA 40% + Transport) for all 20
-  -- approximate: calculated accurately per-employee below in payslips
   85800.00,
   13260.00,
   72540.00,
   'January 2025 payroll — all 20 employees. Processed without issues.',
-  'c1000000-0000-0000-0000-000000000002',
   '2025-02-03 14:30:00+00'
 );
 
@@ -680,8 +603,8 @@ INSERT INTO payslips (
 
 -- EP-001  Margaret Okonkwo  |  base=6500  transport_override=300
 (
-  'g1000000-0000-0000-0000-000000000001',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000001',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000001',
   6500.00, 9400.00, 700.00, 8700.00,
   22, 20, 0, 0, 0, 'paid',
@@ -690,8 +613,8 @@ INSERT INTO payslips (
 
 -- EP-002  David Mensah  |  base=4800  health_override=80
 (
-  'g1000000-0000-0000-0000-000000000002',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000002',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000002',
   4800.00, 6870.00, 560.00, 6310.00,
   22, 22, 0, 0, 0, 'paid',
@@ -700,8 +623,8 @@ INSERT INTO payslips (
 
 -- EP-003  Fatima Al-Hassan  |  base=2800
 (
-  'g1000000-0000-0000-0000-000000000003',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000003',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000003',
   2800.00, 4070.00, 330.00, 3740.00,
   22, 22, 0, 0, 0, 'paid',
@@ -710,8 +633,8 @@ INSERT INTO payslips (
 
 -- EP-004  James Kariuki  |  base=4200
 (
-  'g1000000-0000-0000-0000-000000000004',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000004',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000004',
   4200.00, 6030.00, 470.00, 5560.00,
   22, 22, 0, 0, 0, 'paid',
@@ -720,8 +643,8 @@ INSERT INTO payslips (
 
 -- EP-005  Amara Diallo  |  base=3600  | 1 absent + 2 on_leave
 (
-  'g1000000-0000-0000-0000-000000000005',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000005',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000005',
   3600.00, 5190.00, 410.00, 4780.00,
   22, 18, 1, 0, 2, 'paid',
@@ -730,8 +653,8 @@ INSERT INTO payslips (
 
 -- EP-006  Priya Nair  |  base=2600  | 3 late days
 (
-  'g1000000-0000-0000-0000-000000000006',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000006',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000006',
   2600.00, 3790.00, 310.00, 3480.00,
   22, 17, 0, 3, 0, 'paid',
@@ -740,8 +663,8 @@ INSERT INTO payslips (
 
 -- EP-007  Samuel Acheampong  |  base=4200
 (
-  'g1000000-0000-0000-0000-000000000007',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000007',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000007',
   4200.00, 6030.00, 470.00, 5560.00,
   22, 22, 0, 0, 0, 'paid',
@@ -750,8 +673,8 @@ INSERT INTO payslips (
 
 -- EP-008  Lindiwe Dlamini  |  base=3600
 (
-  'g1000000-0000-0000-0000-000000000008',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000008',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000008',
   3600.00, 5190.00, 410.00, 4780.00,
   22, 22, 0, 0, 0, 'paid',
@@ -760,8 +683,8 @@ INSERT INTO payslips (
 
 -- EP-009  Omar Farouk  |  base=2200  | 2 half_days
 (
-  'g1000000-0000-0000-0000-000000000009',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000009',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000009',
   2200.00, 3230.00, 270.00, 2960.00,
   22, 18, 0, 0, 0, 'paid',
@@ -770,8 +693,8 @@ INSERT INTO payslips (
 
 -- EP-010  Claire Beaumont  |  base=4200
 (
-  'g1000000-0000-0000-0000-000000000010',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000010',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000010',
   4200.00, 6030.00, 470.00, 5560.00,
   22, 22, 0, 0, 0, 'paid',
@@ -780,8 +703,8 @@ INSERT INTO payslips (
 
 -- EP-011  Kofi Asante  |  base=3600
 (
-  'g1000000-0000-0000-0000-000000000011',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000011',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000011',
   3600.00, 5190.00, 410.00, 4780.00,
   22, 22, 0, 0, 0, 'paid',
@@ -790,8 +713,8 @@ INSERT INTO payslips (
 
 -- EP-012  Yuki Tanaka  |  base=2600
 (
-  'g1000000-0000-0000-0000-000000000012',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000012',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000012',
   2600.00, 3790.00, 310.00, 3480.00,
   22, 22, 0, 0, 0, 'paid',
@@ -800,8 +723,8 @@ INSERT INTO payslips (
 
 -- EP-013  Beatrice Owusu  |  base=2400
 (
-  'g1000000-0000-0000-0000-000000000013',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000013',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000013',
   2400.00, 3510.00, 290.00, 3220.00,
   22, 22, 0, 0, 0, 'paid',
@@ -810,8 +733,8 @@ INSERT INTO payslips (
 
 -- EP-014  Emmanuel Nkrumah  |  base=1400  tax_override=5%  | 3 absent
 (
-  'g1000000-0000-0000-0000-000000000014',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000014',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000014',
   1400.00, 2110.00, 120.00, 1990.00,
   22, 17, 3, 0, 0, 'paid',
@@ -820,8 +743,8 @@ INSERT INTO payslips (
 
 -- EP-015  Aisha Balogun  |  base=3600
 (
-  'g1000000-0000-0000-0000-000000000015',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000015',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000015',
   3600.00, 5190.00, 410.00, 4780.00,
   22, 22, 0, 0, 0, 'paid',
@@ -830,8 +753,8 @@ INSERT INTO payslips (
 
 -- EP-016  Patrick Kimani  |  base=3600
 (
-  'g1000000-0000-0000-0000-000000000016',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000016',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000016',
   3600.00, 5190.00, 410.00, 4780.00,
   22, 22, 0, 0, 0, 'paid',
@@ -840,8 +763,8 @@ INSERT INTO payslips (
 
 -- EP-017  Nadia Petrov  |  base=2600
 (
-  'g1000000-0000-0000-0000-000000000017',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000017',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000017',
   2600.00, 3790.00, 310.00, 3480.00,
   22, 22, 0, 0, 0, 'paid',
@@ -850,8 +773,8 @@ INSERT INTO payslips (
 
 -- EP-018  Felix Adeola  |  base=2800
 (
-  'g1000000-0000-0000-0000-000000000018',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000018',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000018',
   2800.00, 4070.00, 330.00, 3740.00,
   22, 22, 0, 0, 0, 'paid',
@@ -860,8 +783,8 @@ INSERT INTO payslips (
 
 -- EP-019  Grace Mwangi  |  base=5500  transport_override=250
 (
-  'g1000000-0000-0000-0000-000000000019',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000019',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000019',
   5500.00, 7950.00, 600.00, 7350.00,
   22, 22, 0, 0, 0, 'paid',
@@ -870,8 +793,8 @@ INSERT INTO payslips (
 
 -- EP-020  Ibrahim Sesay  |  base=1400  tax_override=5%
 (
-  'g1000000-0000-0000-0000-000000000020',
-  'f1000000-0000-0000-0000-000000000001',
+  'e5200000-0000-0000-0000-000000000020',
+  'e5100000-0000-0000-0000-000000000001',
   'd1000000-0000-0000-0000-000000000020',
   1400.00, 2110.00, 120.00, 1990.00,
   22, 22, 0, 0, 0, 'paid',
