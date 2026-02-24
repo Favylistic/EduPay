@@ -15,7 +15,8 @@ import { createClient } from "@/lib/supabase/client"
 import type { Notification } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
+const fetcher = (url: string) =>
+  fetch(url).then((r) => r.json()).then((d) => (Array.isArray(d) ? d : []))
 
 const TYPE_ICONS: Record<string, string> = {
   leave_approved: "✓",

@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const unreadOnly = searchParams.get("unread") === "true"
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!user) return NextResponse.json([], { status: 200 })
 
   let query = supabase
     .from("notifications")
@@ -20,8 +20,8 @@ export async function GET(request: Request) {
   if (unreadOnly) query = query.eq("is_read", false)
 
   const { data, error } = await query
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-  return NextResponse.json(data)
+  if (error) return NextResponse.json([], { status: 200 })
+  return NextResponse.json(data ?? [])
 }
 
 // PATCH /api/notifications — mark all as read
