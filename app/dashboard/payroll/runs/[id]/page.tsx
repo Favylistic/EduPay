@@ -27,7 +27,7 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
 
   const { data: run } = await supabase
     .from("payroll_runs")
-    .select("*, processor:profiles!processed_by(id, first_name, last_name)")
+    .select("*, runner:profiles!run_by(id, first_name, last_name)")
     .eq("id", id)
     .single()
   if (!run) notFound()
@@ -54,14 +54,15 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
         </Button>
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">{run.title}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{MONTHS[run.month - 1]} {run.year} Payroll</h1>
             <Badge variant="outline" className={PAYROLL_STATUS_COLORS[run.status as keyof typeof PAYROLL_STATUS_COLORS]}>
               {PAYROLL_STATUS_LABELS[run.status as keyof typeof PAYROLL_STATUS_LABELS]}
             </Badge>
           </div>
           <p className="text-muted-foreground text-sm mt-1">
-            {MONTHS[run.month - 1]} {run.year} &middot; Processed by{" "}
-            {run.processor ? `${run.processor.first_name} ${run.processor.last_name}` : "System"}
+            Run by{" "}
+            {run.runner ? `${run.runner.first_name} ${run.runner.last_name}` : "System"}
+            {run.completed_at && ` on ${new Date(run.completed_at).toLocaleDateString()}`}
           </p>
         </div>
       </div>
@@ -120,12 +121,12 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{slip.employee?.department?.name ?? "—"}</TableCell>
                   <TableCell className="font-mono text-sm">{formatCurrency(slip.base_salary)}</TableCell>
-                  <TableCell className="hidden sm:table-cell font-mono text-sm">{formatCurrency(slip.gross_salary)}</TableCell>
+                  <TableCell className="hidden sm:table-cell font-mono text-sm">{formatCurrency(slip.gross_earnings)}</TableCell>
                   <TableCell className="hidden sm:table-cell font-mono text-sm text-destructive">-{formatCurrency(slip.total_deductions)}</TableCell>
-                  <TableCell className="font-mono font-semibold">{formatCurrency(slip.net_salary)}</TableCell>
+                  <TableCell className="font-mono font-semibold">{formatCurrency(slip.net_pay)}</TableCell>
                   <TableCell>
                     <Badge variant={slip.status === "paid" ? "default" : "secondary"} className="text-xs">
-                      {slip.status === "paid" ? "Paid" : "Pending"}
+                      {slip.status === "paid" ? "Paid" : "Generated"}
                     </Badge>
                   </TableCell>
                   <TableCell>

@@ -36,9 +36,14 @@ interface CalculationResult {
     profile: { first_name: string | null; last_name: string | null } | null
     department: { name: string } | null
     base_salary: number
-    gross_salary: number
+    gross_earnings: number
     total_deductions: number
-    net_salary: number
+    net_pay: number
+    working_days: number
+    present_days: number
+    absent_days: number
+    late_days: number
+    leave_days: number
     breakdown: {
       absent_days: number
       late_days: number
@@ -102,16 +107,20 @@ export function RunPayrollWizard() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: title || `${MONTHS[result.month - 1]} ${result.year} Payroll`,
           month: result.month,
           year: result.year,
           notes: notes || null,
           payslips: result.payslips.map((p) => ({
             employee_id: p.employee_id,
             base_salary: p.base_salary,
-            gross_salary: p.gross_salary,
+            gross_earnings: p.gross_earnings,
             total_deductions: p.total_deductions,
-            net_salary: p.net_salary,
+            net_pay: p.net_pay,
+            working_days: p.working_days,
+            present_days: p.present_days,
+            absent_days: p.absent_days,
+            late_days: p.late_days,
+            leave_days: p.leave_days,
             breakdown: p.breakdown,
           })),
         }),
@@ -265,16 +274,16 @@ export function RunPayrollWizard() {
                         </TableCell>
                         <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{p.department?.name ?? "—"}</TableCell>
                         <TableCell className="font-mono text-sm">{formatCurrency(p.base_salary)}</TableCell>
-                        <TableCell className="hidden sm:table-cell font-mono text-sm">{formatCurrency(p.gross_salary)}</TableCell>
+                        <TableCell className="hidden sm:table-cell font-mono text-sm">{formatCurrency(p.gross_earnings)}</TableCell>
                         <TableCell>
                           <span className="font-mono text-sm text-destructive">-{formatCurrency(p.total_deductions)}</span>
-                          {p.breakdown.absent_days > 0 && (
+                          {p.absent_days > 0 && (
                             <Badge variant="outline" className="ml-1 text-xs bg-yellow-500/10 text-yellow-700 border-yellow-500/20">
-                              {p.breakdown.absent_days}d absent
+                              {p.absent_days}d absent
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="font-mono font-semibold">{formatCurrency(p.net_salary)}</TableCell>
+                        <TableCell className="font-mono font-semibold">{formatCurrency(p.net_pay)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
