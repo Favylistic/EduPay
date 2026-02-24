@@ -46,7 +46,7 @@ export async function PUT(
 
   const updatePayload: Record<string, unknown> = {
     status: body.status,
-    reviewer_notes: body.reviewer_notes ?? null,
+    review_notes: body.reviewer_notes ?? body.review_notes ?? null,
   }
 
   if (body.status === "approved" || body.status === "rejected") {
@@ -67,16 +67,15 @@ export async function PUT(
   if (data.employee?.profile?.id) {
     const leaveTypeName = data.leave_type?.name ?? "leave"
     const statusLabel = body.status === "approved" ? "approved" : body.status === "rejected" ? "rejected" : "updated"
-    const notifType = body.status === "approved" ? "leave_approved"
-      : body.status === "rejected" ? "leave_rejected"
-      : "general"
+    // notifications.type CHECK: 'info' | 'success' | 'warning' | 'error'
+    const notifType = body.status === "approved" ? "success" : body.status === "rejected" ? "error" : "info"
+    const reviewNote = body.reviewer_notes ?? body.review_notes ?? null
 
     await supabase.from("notifications").insert({
-      user_id: data.employee.profile.id,
+      profile_id: data.employee.profile.id,
       type: notifType,
       title: `Leave Request ${statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}`,
-      message: `Your ${leaveTypeName} request (${data.start_date} – ${data.end_date}) has been ${statusLabel}.${body.reviewer_notes ? ` Note: ${body.reviewer_notes}` : ""}`,
-      reference_id: id,
+      message: `Your ${leaveTypeName} request (${data.start_date} – ${data.end_date}) has been ${statusLabel}.${reviewNote ? ` Note: ${reviewNote}` : ""}`,
     })
   }
 
