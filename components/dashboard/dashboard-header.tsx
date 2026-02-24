@@ -10,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { NotificationBell } from "./notification-bell"
 
 interface BreadcrumbEntry {
   label: string
@@ -25,7 +26,7 @@ export function DashboardHeader({ breadcrumbs }: DashboardHeaderProps) {
     <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="mr-2 h-4" />
-      <Breadcrumb>
+      <Breadcrumb className="flex-1">
         <BreadcrumbList>
           {breadcrumbs.map((item, index) => {
             const isLast = index === breadcrumbs.length - 1
@@ -46,6 +47,7 @@ export function DashboardHeader({ breadcrumbs }: DashboardHeaderProps) {
           })}
         </BreadcrumbList>
       </Breadcrumb>
+      <NotificationBell />
     </header>
   )
 }

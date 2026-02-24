@@ -37,6 +37,11 @@ import {
   ChevronsUpDown,
   GraduationCap,
   ShieldCheck,
+  Clock,
+  History,
+  BarChart2,
+  CalendarDays,
+  ClipboardCheck,
 } from "lucide-react"
 
 interface NavItem {
@@ -64,6 +69,21 @@ const NAV_MAIN: NavGroup[] = [
       { title: "Employees", href: "/dashboard/employees", icon: Users },
       { title: "Departments", href: "/dashboard/departments", icon: Building2 },
       { title: "Designations", href: "/dashboard/designations", icon: Award },
+    ],
+  },
+  {
+    label: "Attendance",
+    items: [
+      { title: "Time Clock", href: "/dashboard/attendance", icon: Clock },
+      { title: "History", href: "/dashboard/attendance/history", icon: History },
+      { title: "Monthly Summary", href: "/dashboard/attendance/summary", icon: BarChart2 },
+    ],
+  },
+  {
+    label: "Leave",
+    items: [
+      { title: "My Leaves", href: "/dashboard/leaves", icon: CalendarDays },
+      { title: "Approvals", href: "/dashboard/leaves/approvals", icon: ClipboardCheck, adminOnly: true },
     ],
   },
   {
