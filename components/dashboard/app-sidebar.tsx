@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { Profile } from "@/lib/types"
@@ -152,9 +153,13 @@ export function AppSidebar({ profile }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-                  <GraduationCap className="h-4 w-4" />
-                </div>
+                <Image
+                  src="/logo.png"
+                  alt="EduPay Logo"
+                  width={32}
+                  height={32}
+                  className="rounded"
+                />
                 <div className="flex flex-col gap-0.5 leading-none">
                   <span className="font-semibold">EduPay</span>
                   <span className="text-xs text-sidebar-foreground/60">

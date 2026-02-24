@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import { LoginForm } from "@/components/auth/login-form"
 
 export const metadata: Metadata = {
@@ -10,10 +11,23 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="flex w-full max-w-[960px] overflow-hidden rounded-lg border bg-card shadow-sm">
         <div className="hidden w-1/2 flex-col justify-between bg-primary p-10 text-primary-foreground lg:flex">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">EduPay</h1>
-            <p className="mt-1 text-sm opacity-80">School Payroll Management</p>
+          {/* Logo Section */}
+          <div className="flex flex-col items-center space-y-4">
+            <Image
+              src="/logo.png"
+              alt="EduPay Logo"
+              width={140}
+              height={140}
+              priority
+              className="rounded-lg"
+            />
+            <div className="text-center">
+              <h1 className="text-2xl font-bold tracking-tight">EduPay</h1>
+              <p className="mt-1 text-sm opacity-80">School Payroll Management</p>
+            </div>
           </div>
+
+          {/* Messaging Section */}
           <div>
             <blockquote className="space-y-2">
               <p className="text-lg leading-relaxed">
@@ -24,6 +38,8 @@ export default function LoginPage() {
               </footer>
             </blockquote>
           </div>
+
+          {/* Footer */}
           <div className="text-xs opacity-60">
             Secure. Reliable. Built for schools.
           </div>
