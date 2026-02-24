@@ -14,8 +14,6 @@ export async function PUT(
     .update({
       title: body.title,
       description: body.description || null,
-      base_salary_min: body.base_salary_min || null,
-      base_salary_max: body.base_salary_max || null,
       is_active: body.is_active,
     })
     .eq("id", id)

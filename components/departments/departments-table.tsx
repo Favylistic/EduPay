@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { Plus, MoreHorizontal, Pencil, Trash2, Search } from "lucide-react"
 import { DepartmentDialog } from "./department-dialog"
 import type { Department } from "@/lib/types"
 
@@ -46,13 +47,16 @@ interface DepartmentsTableProps {
 }
 
 export function DepartmentsTable({ canManage, canDelete }: DepartmentsTableProps) {
-  const { data: departments, mutate } = useSWR<Department[]>(
-    "/api/departments",
-    fetcher
-  )
+  const { data: departments, mutate } = useSWR<Department[]>("/api/departments", fetcher)
+  const [search, setSearch] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editDept, setEditDept] = useState<Department | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+
+  const safeDepartments = Array.isArray(departments) ? departments : []
+  const filtered = safeDepartments.filter((d) =>
+    !search || d.name.toLowerCase().includes(search.toLowerCase())
+  )
 
   function handleEdit(dept: Department) {
     setEditDept(dept)
@@ -66,9 +70,7 @@ export function DepartmentsTable({ canManage, canDelete }: DepartmentsTableProps
 
   async function handleDelete() {
     if (!deleteId) return
-    const res = await fetch(`/api/departments/${deleteId}`, {
-      method: "DELETE",
-    })
+    const res = await fetch(`/api/departments/${deleteId}`, { method: "DELETE" })
     if (res.ok) {
       toast.success("Department deleted")
       mutate()
@@ -78,6 +80,8 @@ export function DepartmentsTable({ canManage, canDelete }: DepartmentsTableProps
     }
     setDeleteId(null)
   }
+
+  const colSpan = canManage ? 5 : 4
 
   return (
     <>
@@ -96,35 +100,51 @@ export function DepartmentsTable({ canManage, canDelete }: DepartmentsTableProps
         )}
       </div>
 
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search departments..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead className="hidden md:table-cell">Description</TableHead>
-              <TableHead>Status</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="font-semibold">Name</TableHead>
+              <TableHead className="font-semibold hidden md:table-cell">Description</TableHead>
+              <TableHead className="font-semibold hidden sm:table-cell">Head</TableHead>
+              <TableHead className="font-semibold">Status</TableHead>
               {canManage && <TableHead className="w-12" />}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {!departments || !Array.isArray(departments) ? (
+            {!departments ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={colSpan} className="h-24 text-center text-muted-foreground">
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : departments.length === 0 ? (
+            ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                  No departments found. Add one to get started.
+                <TableCell colSpan={colSpan} className="h-24 text-center text-muted-foreground">
+                  {search ? "No departments match your search." : "No departments found. Add one to get started."}
                 </TableCell>
               </TableRow>
             ) : (
-              departments.map((dept) => (
+              filtered.map((dept) => (
                 <TableRow key={dept.id}>
                   <TableCell className="font-medium">{dept.name}</TableCell>
-                  <TableCell className="hidden max-w-[300px] truncate md:table-cell">
+                  <TableCell className="hidden max-w-[250px] truncate md:table-cell text-muted-foreground text-sm">
                     {dept.description || "---"}
+                  </TableCell>
+                  <TableCell className="hidden sm:table-cell text-sm">
+                    {dept.head_profile
+                      ? `${dept.head_profile.first_name ?? ""} ${dept.head_profile.last_name ?? ""}`.trim() || "---"
+                      : "---"}
                   </TableCell>
                   <TableCell>
                     <Badge variant={dept.is_active ? "default" : "secondary"}>

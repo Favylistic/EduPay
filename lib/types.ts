@@ -15,12 +15,12 @@ export interface Department {
   id: string
   name: string
   description: string | null
-  head_of_department: string | null
+  head_id: string | null
   is_active: boolean
   created_at: string
   updated_at: string
   // Joined fields
-  head_profile?: Profile | null
+  head_profile?: Pick<Profile, "id" | "first_name" | "last_name" | "email"> | null
   employee_count?: number
 }
 
@@ -28,40 +28,44 @@ export interface Designation {
   id: string
   title: string
   description: string | null
-  base_salary_min: number | null
-  base_salary_max: number | null
   is_active: boolean
   created_at: string
   updated_at: string
   employee_count?: number
 }
 
+export type EmploymentStatus = "active" | "inactive" | "terminated"
+export type StaffType = "academic" | "non_academic"
+export type SalaryBasis = "monthly" | "hourly"
+
 export interface Employee {
   id: string
   profile_id: string | null
   employee_id: string
-  first_name: string
-  last_name: string
-  email: string
-  phone: string | null
-  date_of_birth: string | null
-  gender: "male" | "female" | "other" | null
-  address: string | null
   department_id: string | null
   designation_id: string | null
-  employment_type: "full_time" | "part_time" | "contract"
-  date_of_joining: string
-  basic_salary: number
+  staff_type: StaffType
+  date_of_birth: string | null
+  gender: "male" | "female" | "other" | null
+  phone: string | null
+  address: string | null
+  date_joined: string
+  employment_status: EmploymentStatus
+  salary_basis: SalaryBasis
+  base_salary: number
   bank_name: string | null
   bank_account_number: string | null
   tax_id: string | null
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
+  notes: string | null
   is_active: boolean
   created_at: string
   updated_at: string
-  // Joined fields
-  department?: Department | null
-  designation?: Designation | null
-  profile?: Profile | null
+  // Joined fields from API
+  profile?: Pick<Profile, "id" | "first_name" | "last_name" | "email"> | null
+  department?: Pick<Department, "id" | "name"> | null
+  designation?: Pick<Designation, "id" | "title"> | null
 }
 
 export const ROLE_LABELS: Record<UserRole, string> = {
@@ -71,10 +75,20 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   staff: "Staff",
 }
 
-export const EMPLOYMENT_TYPE_LABELS: Record<Employee["employment_type"], string> = {
-  full_time: "Full Time",
-  part_time: "Part Time",
-  contract: "Contract",
+export const STAFF_TYPE_LABELS: Record<StaffType, string> = {
+  academic: "Academic",
+  non_academic: "Non-Academic",
+}
+
+export const EMPLOYMENT_STATUS_LABELS: Record<EmploymentStatus, string> = {
+  active: "Active",
+  inactive: "Inactive",
+  terminated: "Terminated",
+}
+
+export const SALARY_BASIS_LABELS: Record<SalaryBasis, string> = {
+  monthly: "Monthly",
+  hourly: "Hourly",
 }
 
 export function canManageEmployees(role: UserRole): boolean {
@@ -89,4 +103,14 @@ export function getInitials(firstName: string | null, lastName: string | null): 
   const f = firstName?.charAt(0)?.toUpperCase() ?? ""
   const l = lastName?.charAt(0)?.toUpperCase() ?? ""
   return f + l || "?"
+}
+
+export function formatCurrency(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "---"
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)
 }

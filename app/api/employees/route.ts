@@ -12,13 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Flatten profile data into each employee for the frontend
-  const employees = (data ?? []).map((emp) => ({
-    ...emp,
-    first_name: emp.profile?.first_name ?? "",
-    last_name: emp.profile?.last_name ?? "",
-    email: emp.profile?.email ?? emp.employee_id,
-  }))
+  const employees = data ?? []
 
   return NextResponse.json(employees)
 }

@@ -5,7 +5,7 @@ export async function GET() {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("departments")
-    .select("*, head_profile:profiles!head_of_department(id, first_name, last_name, email)")
+    .select("*, head_profile:profiles!head_id(id, first_name, last_name, email)")
     .order("name")
 
   if (error) {
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     .insert({
       name: body.name,
       description: body.description || null,
-      head_of_department: body.head_of_department || null,
+      head_id: body.head_id || null,
       is_active: body.is_active ?? true,
     })
     .select()

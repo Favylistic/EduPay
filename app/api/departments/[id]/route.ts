@@ -14,7 +14,7 @@ export async function PUT(
     .update({
       name: body.name,
       description: body.description || null,
-      head_of_department: body.head_of_department || null,
+      head_id: body.head_id || null,
       is_active: body.is_active,
     })
     .eq("id", id)

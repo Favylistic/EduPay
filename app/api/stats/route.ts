@@ -12,7 +12,7 @@ export async function GET() {
   }
 
   const [employees, departments, designations] = await Promise.all([
-    supabase.from("employees").select("id, is_active, basic_salary, employment_type", { count: "exact" }),
+    supabase.from("employees").select("id, is_active, base_salary, employment_status", { count: "exact" }),
     supabase.from("departments").select("id", { count: "exact" }),
     supabase.from("designations").select("id", { count: "exact" }),
   ])
@@ -21,7 +21,7 @@ export async function GET() {
   const activeEmployees = employeeList.filter((e) => e.is_active).length
   const totalPayroll = employeeList
     .filter((e) => e.is_active)
-    .reduce((sum, e) => sum + (Number(e.basic_salary) || 0), 0)
+    .reduce((sum, e) => sum + (Number(e.base_salary) || 0), 0)
 
   return NextResponse.json({
     totalEmployees: employees.count ?? 0,

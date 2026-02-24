@@ -39,7 +39,10 @@ import {
 import { MoreHorizontal, Pencil, Trash2, Search, UserPlus } from "lucide-react"
 import { toast } from "sonner"
 import type { Employee, Profile } from "@/lib/types"
+import { STAFF_TYPE_LABELS, EMPLOYMENT_STATUS_LABELS, formatCurrency, getInitials } from "@/lib/types"
 import { EmployeeDialog } from "./employee-dialog"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import Link from "next/link"
 
 const fetcher = (url: string) =>
   fetch(url).then(async (r) => {
@@ -52,7 +55,7 @@ export function EmployeesTable({ profile }: { profile: Profile }) {
   const { data: employees, error: fetchError, mutate } = useSWR<Employee[]>("/api/employees", fetcher)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [typeFilter, setTypeFilter] = useState<string>("all")
+  const [staffTypeFilter, setStaffTypeFilter] = useState<string>("all")
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -61,14 +64,15 @@ export function EmployeesTable({ profile }: { profile: Profile }) {
 
   const safeEmployees = Array.isArray(employees) ? employees : []
   const filtered = safeEmployees.filter((emp) => {
+    const fullName = `${emp.profile?.first_name ?? ""} ${emp.profile?.last_name ?? ""}`.toLowerCase()
     const matchesSearch =
       !search ||
-      `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
+      fullName.includes(search.toLowerCase()) ||
       emp.employee_id.toLowerCase().includes(search.toLowerCase()) ||
-      emp.email.toLowerCase().includes(search.toLowerCase())
+      (emp.profile?.email ?? "").toLowerCase().includes(search.toLowerCase())
     const matchesStatus =
-      statusFilter === "all" || (statusFilter === "active" ? emp.is_active : !emp.is_active)
-    const matchesType = typeFilter === "all" || emp.employment_type === typeFilter
+      statusFilter === "all" || emp.employment_status === statusFilter
+    const matchesType = staffTypeFilter === "all" || emp.staff_type === staffTypeFilter
     return matchesSearch && matchesStatus && matchesType
   })
 
@@ -84,20 +88,23 @@ export function EmployeesTable({ profile }: { profile: Profile }) {
     setDeleteId(null)
   }
 
-  function getEmploymentBadge(type: string) {
-    const variants: Record<string, string> = {
-      full_time: "bg-primary/10 text-primary border-primary/20",
-      part_time: "bg-chart-2/10 text-chart-2 border-chart-2/20",
-      contract: "bg-warning/10 text-warning border-warning/20",
-    }
-    const labels: Record<string, string> = {
-      full_time: "Full Time",
-      part_time: "Part Time",
-      contract: "Contract",
+  function getStaffTypeBadge(type: string) {
+    return (
+      <Badge variant="outline" className={type === "academic" ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground"}>
+        {STAFF_TYPE_LABELS[type as keyof typeof STAFF_TYPE_LABELS] ?? type}
+      </Badge>
+    )
+  }
+
+  function getStatusBadge(status: string) {
+    const styles: Record<string, string> = {
+      active: "bg-green-500/10 text-green-700 border-green-500/20 dark:text-green-400",
+      inactive: "bg-muted text-muted-foreground",
+      terminated: "bg-destructive/10 text-destructive border-destructive/20",
     }
     return (
-      <Badge variant="outline" className={variants[type] ?? ""}>
-        {labels[type] ?? type}
+      <Badge variant="outline" className={styles[status] ?? ""}>
+        {EMPLOYMENT_STATUS_LABELS[status as keyof typeof EMPLOYMENT_STATUS_LABELS] ?? status}
       </Badge>
     )
   }
@@ -124,17 +131,17 @@ export function EmployeesTable({ profile }: { profile: Profile }) {
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="terminated">Terminated</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Type" />
+          <Select value={staffTypeFilter} onValueChange={setStaffTypeFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Staff Type" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="full_time">Full Time</SelectItem>
-              <SelectItem value="part_time">Part Time</SelectItem>
-              <SelectItem value="contract">Contract</SelectItem>
+              <SelectItem value="academic">Academic</SelectItem>
+              <SelectItem value="non_academic">Non-Academic</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -156,55 +163,60 @@ export function EmployeesTable({ profile }: { profile: Profile }) {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="font-semibold">Employee ID</TableHead>
-              <TableHead className="font-semibold">Name</TableHead>
-              <TableHead className="font-semibold">Email</TableHead>
-              <TableHead className="font-semibold">Department</TableHead>
-              <TableHead className="font-semibold">Designation</TableHead>
-              <TableHead className="font-semibold">Type</TableHead>
+              <TableHead className="font-semibold">Employee</TableHead>
+              <TableHead className="font-semibold hidden md:table-cell">Department</TableHead>
+              <TableHead className="font-semibold hidden lg:table-cell">Designation</TableHead>
+              <TableHead className="font-semibold hidden sm:table-cell">Staff Type</TableHead>
               <TableHead className="font-semibold">Status</TableHead>
+              <TableHead className="font-semibold hidden lg:table-cell">Base Salary</TableHead>
               {isAdmin && <TableHead className="font-semibold w-[50px]"><span className="sr-only">Actions</span></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {!employees ? (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 8 : 7} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={isAdmin ? 7 : 6} className="h-24 text-center text-muted-foreground">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 8 : 7} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={isAdmin ? 7 : 6} className="h-24 text-center text-muted-foreground">
                   No employees found.
                 </TableCell>
               </TableRow>
             ) : (
               filtered.map((emp) => (
                 <TableRow key={emp.id}>
-                  <TableCell className="font-mono text-sm">{emp.employee_id}</TableCell>
-                  <TableCell className="font-medium">
-                    {emp.first_name} {emp.last_name}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{emp.email}</TableCell>
                   <TableCell>
+                    <Link
+                      href={`/dashboard/employees/${emp.id}`}
+                      className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          {getInitials(emp.profile?.first_name ?? null, emp.profile?.last_name ?? null)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-sm">
+                          {emp.profile?.first_name ?? ""} {emp.profile?.last_name ?? ""}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">{emp.employee_id}</p>
+                      </div>
+                    </Link>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
                     {emp.department?.name ?? "-"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     {emp.designation?.title ?? "-"}
                   </TableCell>
-                  <TableCell>{getEmploymentBadge(emp.employment_type)}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={emp.is_active ? "default" : "secondary"}
-                      className={
-                        emp.is_active
-                          ? "bg-success/10 text-success border-success/20"
-                          : "bg-muted text-muted-foreground"
-                      }
-                    >
-                      {emp.is_active ? "Active" : "Inactive"}
-                    </Badge>
+                  <TableCell className="hidden sm:table-cell">{getStaffTypeBadge(emp.staff_type)}</TableCell>
+                  <TableCell>{getStatusBadge(emp.employment_status)}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm">
+                    {formatCurrency(emp.base_salary)}
+                    <span className="text-xs text-muted-foreground ml-1">/{emp.salary_basis}</span>
                   </TableCell>
                   {isAdmin && (
                     <TableCell>
