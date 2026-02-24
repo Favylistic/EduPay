@@ -46,6 +46,8 @@ import {
   Play,
   Settings2,
   ListOrdered,
+  LineChart,
+  ScrollText,
 } from "lucide-react"
 
 interface NavItem {
@@ -53,6 +55,7 @@ interface NavItem {
   href: string
   icon: React.ElementType
   adminOnly?: boolean
+  superAdminOnly?: boolean
 }
 
 interface NavGroup {
@@ -97,6 +100,13 @@ const NAV_MAIN: NavGroup[] = [
       { title: "Run Payroll", href: "/dashboard/payroll/run", icon: Play, adminOnly: true },
       { title: "History", href: "/dashboard/payroll/history", icon: ListOrdered, adminOnly: true },
       { title: "Components", href: "/dashboard/payroll/components", icon: Settings2, adminOnly: true },
+    ],
+  },
+  {
+    label: "Reporting",
+    items: [
+      { title: "Analytics", href: "/dashboard/analytics", icon: LineChart, adminOnly: true },
+      { title: "Audit Logs", href: "/dashboard/audit-logs", icon: ScrollText, superAdminOnly: true },
     ],
   },
   {
@@ -151,9 +161,11 @@ export function AppSidebar({ profile }: AppSidebarProps) {
       <SidebarSeparator />
       <SidebarContent>
         {NAV_MAIN.map((group) => {
-          const visibleItems = group.items.filter(
-            (item) => !item.adminOnly || profile.role === "super_admin" || profile.role === "hr_manager"
-          )
+          const visibleItems = group.items.filter((item) => {
+            if (item.superAdminOnly) return profile.role === "super_admin"
+            if (item.adminOnly) return profile.role === "super_admin" || profile.role === "hr_manager"
+            return true
+          })
           if (visibleItems.length === 0) return null
           return (
             <SidebarGroup key={group.label}>
@@ -161,7 +173,7 @@ export function AppSidebar({ profile }: AppSidebarProps) {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {visibleItems.map((item) => {
-                    const exactMatch = ["/dashboard", "/dashboard/payroll"].includes(item.href)
+                    const exactMatch = ["/dashboard", "/dashboard/payroll", "/dashboard/analytics", "/dashboard/audit-logs"].includes(item.href)
                     const isActive = exactMatch
                       ? pathname === item.href
                       : pathname.startsWith(item.href)
