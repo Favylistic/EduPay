@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySuperAdminAccess, logAuditEvent, generateTemporaryPassword } from '@/lib/security'
+import { sendEmployeeInvitationEmail, sendAccountCreationNotificationToAdmin } from '@/lib/email'
 
 // Generate Employee ID using the sequence
 async function generateEmployeeId(supabase: any): Promise<string> {
@@ -65,6 +66,30 @@ export async function POST(request: NextRequest) {
     if (!email || !firstName || !lastName) {
       return NextResponse.json(
         { error: 'Email, first name, and last name are required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Please provide a valid email address' },
+        { status: 400 }
+      )
+    }
+
+    // Check if email domain is whitelisted
+    const emailDomain = email.split('@')[1].toLowerCase()
+    const { data: domainWhitelist } = await supabase
+      .from('email_domain_whitelist')
+      .select('domain')
+      .eq('domain', emailDomain)
+      .single()
+
+    if (!domainWhitelist) {
+      return NextResponse.json(
+        { error: `Email domain '@${emailDomain}' is not allowed. Please use an authorized domain.` },
         { status: 400 }
       )
     }
@@ -169,6 +194,29 @@ export async function POST(request: NextRequest) {
         profile_completed: false,
       })
 
+    // Send invitation email to employee (non-blocking)
+    sendEmployeeInvitationEmail({
+      email,
+      firstName,
+      lastName,
+      employeeId,
+      tempPassword,
+    }).catch((err) => {
+      console.error('[v0] Failed to send invitation email:', err)
+      // Don't fail the account creation if email fails
+    })
+
+    // Send notification to admin (non-blocking)
+    sendAccountCreationNotificationToAdmin(
+      adminAccess.profile.email || 'admin@edupay.app',
+      `${adminAccess.profile.first_name} ${adminAccess.profile.last_name}`,
+      `${firstName} ${lastName}`,
+      email,
+      employeeId
+    ).catch((err) => {
+      console.error('[v0] Failed to send admin notification:', err)
+    })
+
     return NextResponse.json({
       success: true,
       user: {
@@ -178,7 +226,7 @@ export async function POST(request: NextRequest) {
         firstName,
         lastName,
       },
-      message: 'Employee account created successfully. Email notification will be sent.',
+      message: 'Employee account created successfully. Invitation email is being sent.',
     })
   } catch (error) {
     console.error('[v0] Error creating employee account:', error)
