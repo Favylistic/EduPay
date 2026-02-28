@@ -243,7 +243,15 @@ export function CreateEmployeeDialog({ onSuccess }: CreateEmployeeDialogProps) {
             {error && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <div className="space-y-2">
+                  <AlertDescription className="font-medium">{error}</AlertDescription>
+                  {error.includes('User not allowed') && (
+                    <AlertDescription className="text-xs font-normal">
+                      <p>This typically means the email domain is restricted in your Supabase configuration.</p>
+                      <p className="mt-1">Try using an email address with a different domain, or check your Supabase email settings.</p>
+                    </AlertDescription>
+                  )}
+                </div>
               </Alert>
             )}
 

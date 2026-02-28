@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password: tempPassword,
-      email_confirm: true,
+      email_confirm: false, // Don't auto-confirm - let admin send invitation
       user_metadata: {
         first_name: firstName,
         last_name: lastName,
@@ -85,8 +85,21 @@ export async function POST(request: NextRequest) {
     })
 
     if (authError) {
+      console.error('[v0] Auth creation error:', authError)
+      
+      // Provide more helpful error messages
+      let errorMessage = authError.message
+      
+      if (authError.message.includes('User not allowed')) {
+        errorMessage = 'Email domain is not allowed. Please use a different email address or contact Supabase support to whitelist this domain.'
+      } else if (authError.message.includes('already registered')) {
+        errorMessage = 'This email address is already registered in the system.'
+      } else if (authError.message.includes('invalid email')) {
+        errorMessage = 'Please provide a valid email address.'
+      }
+      
       return NextResponse.json(
-        { error: authError.message },
+        { error: errorMessage },
         { status: 400 }
       )
     }
