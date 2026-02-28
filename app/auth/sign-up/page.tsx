@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
-import { SignUpForm } from "@/components/auth/sign-up-form"
+import Link from "next/link"
+import { AlertCircle } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Sign Up",
@@ -17,10 +18,10 @@ export default function SignUpPage() {
           <div>
             <blockquote className="space-y-2">
               <p className="text-lg leading-relaxed">
-                {"\"Join hundreds of schools managing payroll efficiently with EduPay's comprehensive platform.\""}
+                {"\"Secure employee account creation managed by your administrator.\""}
               </p>
               <footer className="text-sm opacity-70">
-                Get started in minutes
+                Streamlined onboarding for enterprise security
               </footer>
             </blockquote>
           </div>
@@ -30,15 +31,42 @@ export default function SignUpPage() {
         </div>
         <div className="flex w-full flex-col justify-center p-8 lg:w-1/2 lg:p-10">
           <div className="mx-auto w-full max-w-[340px]">
-            <div className="mb-8">
-              <h2 className="text-2xl font-semibold tracking-tight text-card-foreground">
-                Create an account
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Enter your details to get started
-              </p>
+            <div className="mb-8 flex items-start gap-3">
+              <AlertCircle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h2 className="text-2xl font-semibold tracking-tight text-card-foreground">
+                  Access Restricted
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Public registration is disabled
+                </p>
+              </div>
             </div>
-            <SignUpForm />
+            
+            <div className="space-y-4">
+              <div className="rounded-lg bg-muted p-4">
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  New employee accounts are created exclusively by your system administrator. Self-registration is not available.
+                </p>
+              </div>
+
+              <div className="rounded-lg border bg-blue-50 p-4 dark:bg-blue-950">
+                <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">If you are a new employee:</h3>
+                <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
+                  Contact your HR or IT department. They will create your account and send you login credentials via email.
+                </p>
+              </div>
+
+              <div className="rounded-lg border bg-green-50 p-4 dark:bg-green-950">
+                <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">Already have an account?</h3>
+                <Link 
+                  href="/auth/login"
+                  className="text-sm font-medium text-green-700 dark:text-green-300 hover:text-green-800 dark:hover:text-green-200 underline"
+                >
+                  Go to Login →
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>

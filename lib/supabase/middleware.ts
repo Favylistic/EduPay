@@ -37,7 +37,7 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Public routes that don't require authentication
-  const publicRoutes = ["/", "/auth/login", "/auth/sign-up", "/auth/sign-up-success", "/auth/error", "/auth/callback"]
+  const publicRoutes = ["/", "/auth/login", "/auth/sign-up", "/auth/sign-up-success", "/auth/error", "/auth/callback", "/auth/first-login"]
   const isPublicRoute = publicRoutes.some(
     (route) => pathname === route
   )
@@ -48,11 +48,16 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // If user is logged in and tries to access auth pages, redirect to dashboard
-  if (user && (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/sign-up"))) {
+  // If user is logged in and tries to access auth pages, redirect appropriately
+  if (user && pathname.startsWith("/auth/login")) {
     const url = request.nextUrl.clone()
     url.pathname = "/dashboard"
     return NextResponse.redirect(url)
+  }
+
+  // Prevent access to sign-up page entirely
+  if (pathname === "/auth/sign-up") {
+    return supabaseResponse
   }
 
   return supabaseResponse

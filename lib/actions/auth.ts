@@ -26,6 +26,19 @@ export async function signIn(formData: FormData) {
     }
   }
 
+  // Check if this is a first login with temporary password
+  if (authData.user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_temporary_password, password_changed_at")
+      .eq("id", authData.user.id)
+      .single()
+
+    if (profile?.is_temporary_password) {
+      redirect("/auth/first-login")
+    }
+  }
+
   redirect("/dashboard")
 }
 

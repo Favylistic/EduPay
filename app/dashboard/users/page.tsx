@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { UsersTable } from "@/components/users/users-table"
+import { CreateEmployeeDialog } from "@/components/users/create-employee-dialog"
 import type { Profile } from "@/lib/types"
 
 export const metadata: Metadata = {
@@ -49,14 +50,19 @@ export default async function UsersPage() {
         ]}
       />
       <div className="flex-1 space-y-6 p-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-balance">
-            User Management
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            View all system users and manage their roles.
-            {resolvedProfile.role !== "super_admin" && " Only Super Admins can change roles."}
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-balance">
+              User Management
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              View all system users and manage their roles.
+              {resolvedProfile.role !== "super_admin" && " Only Super Admins can change roles."}
+            </p>
+          </div>
+          {resolvedProfile.role === "super_admin" && (
+            <CreateEmployeeDialog />
+          )}
         </div>
         <UsersTable
           currentUserId={resolvedProfile.id}
