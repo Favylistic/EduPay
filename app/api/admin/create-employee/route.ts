@@ -1,11 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
-
-// Generate a secure temporary password
-function generateTemporaryPassword(): string {
-  return crypto.randomBytes(8).toString('hex').slice(0, 12)
-}
+import { verifySuperAdminAccess, logAuditEvent, generateTemporaryPassword } from '@/lib/security'
 
 // Generate Employee ID using the sequence
 async function generateEmployeeId(supabase: any): Promise<string> {
@@ -34,31 +29,27 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
 
-    // Verify admin access
-    const {
-      data: { user: currentUser },
-    } = await supabase.auth.getUser()
+    // Verify super admin access
+    const adminAccess = await verifySuperAdminAccess()
 
-    if (!currentUser) {
+    if (!adminAccess.isAuthorized || !adminAccess.profile) {
+      // Log unauthorized access attempt
+      if (adminAccess.profile) {
+        await logAuditEvent(
+          'UNAUTHORIZED_ACCESS_ATTEMPT',
+          adminAccess.profile.id,
+          undefined,
+          { endpoint: '/api/admin/create-employee', reason: 'Insufficient permissions' }
+        )
+      }
+
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: adminAccess.error || 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    // Check if user is super admin
-    const { data: adminProfile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', currentUser.id)
-      .single()
-
-    if (adminProfile?.role !== 'super_admin') {
-      return NextResponse.json(
-        { error: 'Only super admins can create employee accounts' },
-        { status: 403 }
-      )
-    }
+    const currentUserId = adminAccess.profile.id
 
     // Parse request body
     const {
@@ -140,20 +131,21 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Log account creation
-    await supabase
-      .from('account_creation_audit')
-      .insert({
-        admin_id: currentUser.id,
-        created_user_id: userId,
-        employee_id: employeeId,
+    // Log account creation via audit system
+    await logAuditEvent(
+      'ACCOUNT_CREATED',
+      currentUserId,
+      userId,
+      {
         email,
-        first_name: firstName,
-        last_name: lastName,
-        department: department || null,
-        designation: designation || null,
-        created_at: new Date().toISOString(),
-      })
+        firstName,
+        lastName,
+        employeeId,
+        department,
+        designation,
+        salary: salary ? 'SET' : 'NOT_SET',
+      }
+    )
 
     // Create user setup status record
     await supabase
@@ -176,7 +168,21 @@ export async function POST(request: NextRequest) {
       message: 'Employee account created successfully. Email notification will be sent.',
     })
   } catch (error) {
-    console.error('Error creating employee account:', error)
+    console.error('[v0] Error creating employee account:', error)
+
+    // Log the error for security monitoring
+    await logAuditEvent(
+      'SUSPICIOUS_ACTIVITY',
+      'SYSTEM',
+      undefined,
+      {
+        endpoint: '/api/admin/create-employee',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
+    ).catch(() => {
+      // Fail silently if logging fails
+    })
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

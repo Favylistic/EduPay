@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
+import { SetupWarning } from "@/components/dashboard/setup-warning"
 import { AdminOverviewCards } from "@/components/dashboard/admin-overview-cards"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { RecentEmployees } from "@/components/dashboard/recent-employees"
@@ -77,6 +78,8 @@ export default async function DashboardPage() {
               View your attendance, leaves, and payslips
             </p>
           </div>
+
+          <SetupWarning />
 
           {/* Quick attendance status */}
           <Card>
@@ -249,6 +252,8 @@ export default async function DashboardPage() {
             Overview of your school payroll system
           </p>
         </div>
+
+        <SetupWarning />
 
         {/* Admin Overview Metrics */}
         <AdminOverviewCards
